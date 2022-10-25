@@ -1,29 +1,31 @@
 <?php
 
 /**
- * File for Socket\Factory class.
- * @package Phrity > Socket
+ * File for Net\UriFactory class.
+ * @package Phrity > Net > Uri
+ * @see https://www.rfc-editor.org/rfc/rfc3986
+ * @see https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface
  */
 
-namespace Phrity\Socket;
+namespace Phrity\Net;
 
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\{
+    UriFactoryInterface,
+    UriInterface
+};
 
 /**
- * Socket\Factory class.
+ * Net\UriFactory class.
  */
-class Factory
+class UriFactory implements UriFactoryInterface
 {
-    public function getClient(UriInterface $uri)
+    /**
+     * Create a new URI.
+     * @param string $uri The URI to parse.
+     * @throws \InvalidArgumentException If the given URI cannot be parsed
+     */
+    public function createUri(string $uri = ''): UriInterface
     {
-        $errno = $errstr = '';
-        $client = stream_socket_client(
-            "{$uri}",
-            $errno,
-            $errstr,
-            null,
-            STREAM_CLIENT_CONNECT, // STREAM_CLIENT_PERSISTENT
-            null
-        );
+        return new Uri($uri);
     }
 }

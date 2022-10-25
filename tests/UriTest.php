@@ -2,7 +2,7 @@
 
 /**
  * Tests for Net\Uri class.
- * @package Phrity > Net
+ * @package Phrity > Net > Uri
  */
 
 declare(strict_types=1);
@@ -105,13 +105,12 @@ class UriTest extends TestCase
             ['a://0:0@0/0?0#0'],
             ['http://ηßöø必Дあ.com/'],
             ['http://localhost'],
-// @todo: fix these from guzzle
-//            ['file:///tmp/test.txt'],
-//            ['http://example.org//path-not-host.com'],
-//            ['//example.org//path-not-host.com'],
-//            ['//'], // Valid accoring to RFC 3986, but not in parse_url
-//            ['///'], // Valid accoring to RFC 3986, but not in parse_url
-
+            ['localhost',],
+            ['http://localhost'],
+            ['/a-zA-Z0-9.-_~!$&\'()*+,;=:@?a-zA-Z0-9.-_~!$&\'()*+,;=:@#a-zA-Z0-9.-_~!$&\'()*+,;=:@'],
+            ['mailto:foo'],
+            ['http://[2a00:f48:1008::212:183:10]:56?foo=bar'],
+            ['tel:+1-816-555-1212'],
         ];
     }
 
@@ -129,6 +128,8 @@ class UriTest extends TestCase
         return [
             ['urn://host:with:colon'],
             ['0://0:0@0/0?0#0'], // shceme must begin with a letter
+            ['//user:pass@:8080',],
+            ['http://'],
         ];
     }
 
@@ -380,8 +381,6 @@ class UriTest extends TestCase
     {
         return [
             [[]],
-// @todo: Is this valid or not?
-//            ['mailto:foo'],
         ];
     }
 

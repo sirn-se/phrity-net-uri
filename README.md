@@ -6,7 +6,7 @@
 Implementation of the [PSR-7 Uri](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
 and [PSR-17 UriFactory](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface) interfaces.
 
-Nothing fancy. Just working. Because I need a URI implementation **not** related to HHTP messaging.
+Nothing fancy. Just working. Because I need a URI implementation **not** related to HTTP messaging.
 Allows all valid schemes.
 
 ## Installation
@@ -23,32 +23,32 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
 {
     // Constructor
 
-    public function __construct(string $uri_string = '')
+    public function __construct(string $uri_string = '');
 
     // PSR-7 getters
 
-    public function getScheme(): string
-    public function getAuthority(): string
-    public function getUserInfo(): string
-    public function getHost(): string
-    public function getPort(): ?int
-    public function getPath(): string
-    public function getQuery(): string
-    public function getFragment(): string
+    public function getScheme(): string;
+    public function getAuthority(): string;
+    public function getUserInfo(): string;
+    public function getHost(): string;
+    public function getPort(): ?int;
+    public function getPath(): string;
+    public function getQuery(): string;
+    public function getFragment(): string;
 
     // PSR-7 setters
 
-    public function withScheme($scheme): UriInterface
-    public function withUserInfo($user, $password = null): UriInterface
-    public function withHost($host): UriInterface
-    public function withPort($port): UriInterface
-    public function withPath($path): UriInterface
-    public function withQuery($query): UriInterface
-    public function withFragment($fragment): UriInterface
+    public function withScheme($scheme): UriInterface;
+    public function withUserInfo($user, $password = null): UriInterface;
+    public function withHost($host): UriInterface;
+    public function withPort($port): UriInterface;
+    public function withPath($path): UriInterface;
+    public function withQuery($query): UriInterface;
+    public function withFragment($fragment): UriInterface;
 
     // PSR-7 string representation
 
-    public function __toString(): string
+    public function __toString(): string;
 }
 ```
 
@@ -59,11 +59,11 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 {
     // Constructor
 
-    public function __construct()
+    public function __construct();
 
     // PSR-17 factory
 
-    public function createUri(string $uri = ''): UriInterface
+    public function createUri(string $uri = ''): UriInterface;
 }
 ```
 

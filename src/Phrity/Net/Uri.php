@@ -341,8 +341,6 @@ class Uri implements UriInterface
                 $this->assertString($component, $value);
                 $value = $this->encode($value, '?');
                 return $value;
-            default:
-                return null;
         }
     }
 

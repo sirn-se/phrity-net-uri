@@ -1,8 +1,8 @@
 {
   "name": "phrity/net-uri",
   "type": "library",
-  "description": "",
-  "homepage": "https://phrity.sirn.se/",
+  "description": "PSR-7 Uri and PSR-17 UriFactory implementation",
+  "homepage": "https://phrity.sirn.se/net-uri",
   "keywords": ["uri", "uri factory", "PSR-7", "PSR-17"],
   "license": "MIT",
   "authors": [
@@ -19,7 +19,6 @@
   },
   "require": {
     "php": "^7.4|^8.0",
-    "phrity/util-errorhandler": "^1.0",
     "psr/http-factory": "^1.0",
     "psr/http-message": "^1.0"
   },

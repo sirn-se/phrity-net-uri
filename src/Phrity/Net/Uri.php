@@ -342,9 +342,6 @@ class Uri implements UriInterface
             if ($this->isEmpty($auth['host']) && !$this->isEmpty($auth['user'])) {
                 throw new InvalidArgumentException("Invalid 'authority'.");
             }
-            if (!$this->isEmpty($auth['passc']) && $this->isEmpty($auth['user'])) {
-                throw new InvalidArgumentException("Invalid 'userinfo'.");
-            }
             $this->setComponent('user', isset($auth['user']) ? $auth['user'] : '');
             $this->setComponent('pass', isset($auth['passc']) ? $auth['pass'] : '');
             $this->setComponent('host', isset($auth['host']) ? $auth['host'] : '');

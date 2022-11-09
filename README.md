@@ -3,8 +3,8 @@
 
 # Introduction
 
-Implementation of the [PSR-7 Uri](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
-and [PSR-17 UriFactory](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface) interfaces.
+Implementation of the [PSR-7 UriInterface](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
+and [PSR-17 UriFactoryInterface](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface) interfaces.
 
 Nothing fancy. Just working. Because I need a URI implementation **not** related to HTTP messaging.
 Allows all valid schemes.
@@ -15,6 +15,43 @@ Install with [Composer](https://getcomposer.org/);
 ```
 composer require phrity/net-uri
 ```
+
+## Modifiers
+
+Out of the box, it will behave as specified by PSR standards.
+To change behaviour, there are some modifiers available.
+These can be added as last argument in all `get` and `with` methods, plus the `toString` method.
+
+### `REQUIRE_PORT`
+
+By PSR standard, if port is default for scheme it will be hidden.
+This options will attempt to always show the port.
+If set, it will be shown even if default. If not set, it will use default port (if available).
+
+### `ABSOLUTE_PATH`
+
+Will cause paths to use absolute form, i.e. starting with `/`.
+
+### `NORMALIZE_PATH`
+
+Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
+
+### Examples
+
+```php
+$uri = new Uri('a/./path/../to//something');
+$uri->getPath(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something'
+$uri->toString(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something'
+
+$clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH);
+$clone->getPath(); // => '/path/somewhere'
+$uri->toString(; // => '/a/to/something'
+```
+
+
+## Classes
+
+There are two available classes, `Uri` and `UriFactory`.
 
 ### The Uri class
 
@@ -27,28 +64,32 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
 
     // PSR-7 getters
 
-    public function getScheme(): string;
-    public function getAuthority(): string;
-    public function getUserInfo(): string;
-    public function getHost(): string;
-    public function getPort(): ?int;
-    public function getPath(): string;
-    public function getQuery(): string;
-    public function getFragment(): string;
+    public function getScheme(int $flags = 0): string;
+    public function getAuthority(int $flags = 0): string;
+    public function getUserInfo(int $flags = 0): string;
+    public function getHost(int $flags = 0): string;
+    public function getPort(int $flags = 0): ?int;
+    public function getPath(int $flags = 0): string;
+    public function getQuery(int $flags = 0): string;
+    public function getFragment(int $flags = 0): string;
 
     // PSR-7 setters
 
-    public function withScheme($scheme): UriInterface;
-    public function withUserInfo($user, $password = null): UriInterface;
-    public function withHost($host): UriInterface;
-    public function withPort($port): UriInterface;
-    public function withPath($path): UriInterface;
-    public function withQuery($query): UriInterface;
-    public function withFragment($fragment): UriInterface;
+    public function withScheme($scheme, int $flags = 0): UriInterface;
+    public function withUserInfo($user, $password = null, int $flags = 0): UriInterface;
+    public function withHost($host, int $flags = 0): UriInterface;
+    public function withPort($port, int $flags = 0): UriInterface;
+    public function withPath($path, int $flags = 0): UriInterface;
+    public function withQuery($query, int $flags = 0): UriInterface;
+    public function withFragment($fragment, int $flags = 0): UriInterface;
 
     // PSR-7 string representation
 
     public function __toString(): string;
+
+    // Additional methods
+
+    public function toString(int $flags = 0)): string;
 }
 ```
 
@@ -72,4 +113,5 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
+| `1.1` | `^7.4\|^8.0` | Modifiers |
 | `1.0` | `^7.4\|^8.0` | Initial version |

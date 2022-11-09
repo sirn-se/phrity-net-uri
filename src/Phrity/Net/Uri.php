@@ -17,6 +17,15 @@ use Psr\Http\Message\UriInterface;
  */
 class Uri implements UriInterface
 {
+    public const REQUIRE_PORT = 1; // Always include port, explicit or default
+    public const ABSOLUTE_PATH = 2; // Enforce absolute path
+    public const NORMALIZE_PATH = 4; // Normalize path
+
+    private const RE_MAIN = '!^(?P<schemec>(?P<scheme>[^:/?#]+):)?(?P<authorityc>//(?P<authority>[^/?#]*))?'
+                          . '(?P<path>[^?#]*)(?P<queryc>\?(?P<query>[^#]*))?(?P<fragmentc>#(?P<fragment>.*))?$!';
+    private const RE_AUTH = '!^(?P<userinfoc>(?P<user>[^:/?#]+)(?P<passc>:(?P<pass>[^:/?#]+))?@)?'
+                          . '(?P<host>[^:/?#]*|\[[^/?#]*\])(?P<portc>:(?P<port>[0-9]*))?$!';
+
     private static $port_defaults = [
         'acap' => 674,
         'afp' => 548,
@@ -61,6 +70,7 @@ class Uri implements UriInterface
     ];
 
     private $scheme;
+    private $authority;
     private $host;
     private $port;
     private $user;
@@ -70,19 +80,13 @@ class Uri implements UriInterface
     private $fragment;
 
     /**
-     * Create new URI instance ysing a string
+     * Create new URI instance using a string
      * @param string $uri_string URI as string
      * @throws \InvalidArgumentException If the given URI cannot be parsed
      */
-    public function __construct(string $uri_string = '')
+    public function __construct(string $uri_string = '', int $flags = 0)
     {
-        $uri_parsed = parse_url($uri_string);
-        if (!is_array($uri_parsed)) {
-            throw new InvalidArgumentException('Invalid URL provided');
-        }
-        foreach ($uri_parsed as $compontent => $value) {
-            $this->setCompontent($compontent, $value);
-        }
+        $this->parse($uri_string);
     }
 
 
@@ -92,7 +96,7 @@ class Uri implements UriInterface
      * Retrieve the scheme component of the URI.
      * @return string The URI scheme
      */
-    public function getScheme(): string
+    public function getScheme(int $flags = 0): string
     {
         return $this->getComponent('scheme') ?? '';
     }
@@ -101,14 +105,14 @@ class Uri implements UriInterface
      * Retrieve the authority component of the URI.
      * @return string The URI authority, in "[user-info@]host[:port]" format
      */
-    public function getAuthority(): string
+    public function getAuthority(int $flags = 0): string
     {
         $host = $this->formatComponent($this->getComponent('host'));
         if ($this->isEmpty($host)) {
             return '';
         }
         $userinfo = $this->formatComponent($this->getUserInfo(), '', '@');
-        $port = $this->formatComponent($this->getPort(), ':');
+        $port = $this->formatComponent($this->getPort($flags), ':');
         return "{$userinfo}{$host}{$port}";
     }
 
@@ -116,7 +120,7 @@ class Uri implements UriInterface
      * Retrieve the user information component of the URI.
      * @return string The URI user information, in "username[:password]" format
      */
-    public function getUserInfo(): string
+    public function getUserInfo(int $flags = 0): string
     {
         $user = $this->formatComponent($this->getComponent('user'));
         $pass = $this->formatComponent($this->getComponent('pass'), ':');
@@ -127,7 +131,7 @@ class Uri implements UriInterface
      * Retrieve the host component of the URI.
      * @return string The URI host
      */
-    public function getHost(): string
+    public function getHost(int $flags = 0): string
     {
         return $this->getComponent('host') ?? '';
     }
@@ -136,11 +140,14 @@ class Uri implements UriInterface
      * Retrieve the port component of the URI.
      * @return null|int The URI port
      */
-    public function getPort(): ?int
+    public function getPort(int $flags = 0): ?int
     {
         $port = $this->getComponent('port');
         $scheme = $this->getComponent('scheme');
         $default = isset(self::$port_defaults[$scheme]) ? self::$port_defaults[$scheme] : null;
+        if ($flags & self::REQUIRE_PORT) {
+            return !$this->isEmpty($port) ? $port : $default;
+        }
         return $this->isEmpty($port) || $port === $default ? null : $port;
     }
 
@@ -148,16 +155,23 @@ class Uri implements UriInterface
      * Retrieve the path component of the URI.
      * @return string The URI path
      */
-    public function getPath(): string
+    public function getPath(int $flags = 0): string
     {
-        return $this->getComponent('path') ?? '';
+        $path = $this->getComponent('path') ?? '';
+        if ($flags & self::NORMALIZE_PATH) {
+            $path = $this->normalizePath($path);
+        }
+        if ($flags & self::ABSOLUTE_PATH && substr($path, 0, 1) !== '/') {
+            $path = "/{$path}";
+        }
+        return $path;
     }
 
     /**
      * Retrieve the query string of the URI.
      * @return string The URI query string
      */
-    public function getQuery(): string
+    public function getQuery(int $flags = 0): string
     {
         return $this->getComponent('query') ?? '';
     }
@@ -166,7 +180,7 @@ class Uri implements UriInterface
      * Retrieve the fragment component of the URI.
      * @return string The URI fragment
      */
-    public function getFragment(): string
+    public function getFragment(int $flags = 0): string
     {
         return $this->getComponent('fragment') ?? '';
     }
@@ -181,10 +195,14 @@ class Uri implements UriInterface
      * @throws \InvalidArgumentException for invalid schemes
      * @throws \InvalidArgumentException for unsupported schemes
      */
-    public function withScheme($scheme): UriInterface
+    public function withScheme($scheme, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('scheme', $scheme);
+        if ($flags & self::REQUIRE_PORT) {
+            $clone->setComponent('port', $this->getPort(self::REQUIRE_PORT));
+            $default = isset(self::$port_defaults[$scheme]) ? self::$port_defaults[$scheme] : null;
+        }
+        $clone->setComponent('scheme', $scheme);
         return $clone;
     }
 
@@ -194,11 +212,11 @@ class Uri implements UriInterface
      * @param null|string $password The password associated with $user
      * @return static A new instance with the specified user information
      */
-    public function withUserInfo($user, $password = null): UriInterface
+    public function withUserInfo($user, $password = null, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('user', $user);
-        $clone->setCompontent('pass', $password);
+        $clone->setComponent('user', $user);
+        $clone->setComponent('pass', $password);
         return $clone;
     }
 
@@ -208,10 +226,10 @@ class Uri implements UriInterface
      * @return static A new instance with the specified host
      * @throws \InvalidArgumentException for invalid hostnames
      */
-    public function withHost($host): UriInterface
+    public function withHost($host, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('host', $host);
+        $clone->setComponent('host', $host);
         return $clone;
     }
 
@@ -221,10 +239,10 @@ class Uri implements UriInterface
      * @return static A new instance with the specified port
      * @throws \InvalidArgumentException for invalid ports
      */
-    public function withPort($port): UriInterface
+    public function withPort($port, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('port', $port);
+        $clone->setComponent('port', $port);
         return $clone;
     }
 
@@ -234,10 +252,16 @@ class Uri implements UriInterface
      * @return static A new instance with the specified path
      * @throws \InvalidArgumentException for invalid paths
      */
-    public function withPath($path): UriInterface
+    public function withPath($path, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('path', $path);
+        if ($flags & self::NORMALIZE_PATH) {
+            $path = $this->normalizePath($path);
+        }
+        if ($flags & self::ABSOLUTE_PATH && substr($path, 0, 1) !== '/') {
+            $path = "/{$path}";
+        }
+        $clone->setComponent('path', $path);
         return $clone;
     }
 
@@ -247,10 +271,10 @@ class Uri implements UriInterface
      * @return static A new instance with the specified query string
      * @throws \InvalidArgumentException for invalid query strings
      */
-    public function withQuery($query): UriInterface
+    public function withQuery($query, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('query', $query);
+        $clone->setComponent('query', $query);
         return $clone;
     }
 
@@ -259,10 +283,10 @@ class Uri implements UriInterface
      * @param string $fragment The fragment to use with the new instance
      * @return static A new instance with the specified fragment
      */
-    public function withFragment($fragment): UriInterface
+    public function withFragment($fragment, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        $clone->setCompontent('fragment', $fragment);
+        $clone->setComponent('fragment', $fragment);
         return $clone;
     }
 
@@ -275,15 +299,22 @@ class Uri implements UriInterface
      */
     public function __toString(): string
     {
+        return $this->toString();
+    }
+
+
+    // ---------- Extensions ------------------------------------------------------------------------------------------
+
+    /**
+     * Return the string representation as a URI reference.
+     * @return string
+     */
+    public function toString(int $flags = 0): string
+    {
         $scheme = $this->formatComponent($this->getComponent('scheme'), '', ':');
-        $authority = $this->formatComponent($this->getAuthority(), '//');
-        $path = $this->formatComponent($this->getComponent('path'));
-        if ($path && $authority && $path[0] !== '/') {
-            $path = "/{$path}";
-        }
-        if (substr($path, 0, 2) === '//') {
-            $path = substr($path, 1);
-        }
+        $authority = $this->authority ? "//{$this->formatComponent($this->getAuthority($flags))}" : '';
+        $path_flags = ($this->authority && $this->path ? self::ABSOLUTE_PATH : 0) | $flags;
+        $path = $this->formatComponent($this->getPath($path_flags));
         $query = $this->formatComponent($this->getComponent('query'), '?');
         $fragment = $this->formatComponent($this->getComponent('fragment'), '#');
         return "{$scheme}{$authority}{$path}{$query}{$fragment}";
@@ -291,6 +322,35 @@ class Uri implements UriInterface
 
 
     // ---------- Private helper methods ------------------------------------------------------------------------------
+
+    private function parse(string $uri_string = ''): void
+    {
+        if ($uri_string === '') {
+            return;
+        }
+        preg_match(self::RE_MAIN, $uri_string, $main);
+        $this->authority = !empty($main['authorityc']);
+        $this->setComponent('scheme', isset($main['schemec']) ? $main['scheme'] : '');
+        $this->setComponent('path', isset($main['path']) ? $main['path'] : '');
+        $this->setComponent('query', isset($main['queryc']) ? $main['query'] : '');
+        $this->setComponent('fragment', isset($main['fragmentc']) ? $main['fragment'] : '');
+        if ($this->authority) {
+            preg_match(self::RE_AUTH, $main['authority'], $auth);
+            if (empty($auth) && $main['authority'] !== '') {
+                throw new InvalidArgumentException("Invalid 'authority'.");
+            }
+            if ($this->isEmpty($auth['host']) && !$this->isEmpty($auth['user'])) {
+                throw new InvalidArgumentException("Invalid 'authority'.");
+            }
+            if (!$this->isEmpty($auth['passc']) && $this->isEmpty($auth['user'])) {
+                throw new InvalidArgumentException("Invalid 'userinfo'.");
+            }
+            $this->setComponent('user', isset($auth['user']) ? $auth['user'] : '');
+            $this->setComponent('pass', isset($auth['passc']) ? $auth['pass'] : '');
+            $this->setComponent('host', isset($auth['host']) ? $auth['host'] : '');
+            $this->setComponent('port', isset($auth['portc']) ? $auth['port'] : '');
+        }
+    }
 
     private function encode(string $source, string $keep = ''): string
     {
@@ -305,7 +365,7 @@ class Uri implements UriInterface
         }, $source);
     }
 
-    private function setCompontent(string $component, $value): void
+    private function setComponent(string $component, $value): void
     {
         $value = $this->parseCompontent($component, $value);
         $this->$component = $value;
@@ -323,6 +383,7 @@ class Uri implements UriInterface
                 return strtolower($value);
             case 'host': // IP-literal / IPv4address / reg-name
                 $this->assertString($component, $value);
+                $this->authority = $this->authority || !$this->isEmpty($value);
                 return strtolower($value);
             case 'port':
                 $this->assertInteger($component, $value);
@@ -378,5 +439,35 @@ class Uri implements UriInterface
         if (preg_match($pattern, $value) == 0) {
             throw new InvalidArgumentException("Invalid '{$component}': Should match {$pattern}");
         }
+    }
+
+    public function normalizePath(string $path): string
+    {
+        $result = [];
+        preg_match_all('!([^/]*/|[^/]*$)!', $path, $items);
+        foreach ($items[0] as $item) {
+            switch ($item) {
+                case '':
+                case './':
+                case '.':
+                    break; // just skip
+                case '/':
+                    if (empty($result)) {
+                        array_push($result, $item); // add
+                    }
+                    break;
+                case '..':
+                case '../':
+                    if (empty($result) || end($result) == '../') {
+                        array_push($result, $item); // add
+                    } else {
+                        array_pop($result); // remove previous
+                    }
+                    break;
+                default:
+                    array_push($result, $item); // add
+            }
+        }
+        return implode('', $result);
     }
 }

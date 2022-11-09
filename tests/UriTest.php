@@ -109,8 +109,12 @@ class UriTest extends TestCase
             ['http://localhost'],
             ['/a-zA-Z0-9.-_~!$&\'()*+,;=:@?a-zA-Z0-9.-_~!$&\'()*+,;=:@#a-zA-Z0-9.-_~!$&\'()*+,;=:@'],
             ['mailto:foo'],
+            ['http://[2a00:f48:1008::212:183:10]#frag'],
             ['http://[2a00:f48:1008::212:183:10]:56?foo=bar'],
             ['tel:+1-816-555-1212'],
+            ['unix:///tmp/test.sock'],
+            ['file:///tmp/filename.ext'],
+            ['http://'], // uncertain, currently valid
         ];
     }
 
@@ -126,10 +130,9 @@ class UriTest extends TestCase
     public function provideInvalidUris(): array
     {
         return [
-            ['urn://host:with:colon'],
-            ['0://0:0@0/0?0#0'], // shceme must begin with a letter
-            ['//user:pass@:8080',],
-            ['http://'],
+            ['urn://host:with:colon'], // only colons within [] for ipv6
+            ['0://0:0@0/0?0#0'], // scheme must begin with a letter
+            ['//user:pass@:8080',], // userinfo and port require host
         ];
     }
 
@@ -389,7 +392,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withHost('domain.tld')->withPath('my/path');
         $this->assertSame('//domain.tld/my/path', (string)$uri);
         $uri = (new Uri())->withHost('domain.tld')->withPath('//my/path');
-        $this->assertSame('//domain.tld/my/path', (string)$uri);
+        $this->assertSame('//domain.tld//my/path', (string)$uri);
     }
 
 

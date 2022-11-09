@@ -132,7 +132,8 @@ class UriTest extends TestCase
         return [
             ['urn://host:with:colon'], // only colons within [] for ipv6
             ['0://0:0@0/0?0#0'], // scheme must begin with a letter
-            ['//user:pass@:8080',], // userinfo and port require host
+            ['//user:pass@:8080'], // userinfo and port require host
+            ['//:pass@test.se'], // no pass without user
         ];
     }
 

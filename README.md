@@ -22,19 +22,19 @@ Out of the box, it will behave as specified by PSR standards.
 To change behaviour, there are some modifiers available.
 These can be added as last argument in all `get` and `with` methods, plus the `toString` method.
 
-| Name | Effect |
-| --- | --- |
-| `REQUIRE_PORT` |
+`REQUIRE_PORT`
+
 By PSR standard, if port is default for scheme it will be hidden.
 This options will attempt to always show the port.
 If set, it will be shown even if default. If not set, it will use default port (if available).
-|
-| `ABSOLUTE_PATH` |
+
+`ABSOLUTE_PATH`
+
 Will cause paths to use absolute form, i.e. starting with `/`.
-|
-| `NORMALIZE_PATH` |
+
+`NORMALIZE_PATH`
+
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
-|
 
 ### Examples
 
@@ -50,6 +50,7 @@ $uri->toString(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something
 $clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH);
 $clone->getPath(); // => '/path/somewhere'
 ```
+
 
 ## Classes
 

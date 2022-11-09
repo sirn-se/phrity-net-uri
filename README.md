@@ -6,8 +6,8 @@
 Implementation of the [PSR-7 UriInterface](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
 and [PSR-17 UriFactoryInterface](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface) interfaces.
 
-Nothing fancy. Just working. Because I need a URI implementation **not** related to HTTP messaging.
-Allows all valid schemes.
+Nothing fancy. Just working. Because I need a URI implementation **not** hadwired to HTTP messaging.
+And some extras. Allows all valid schemes.
 
 ## Installation
 
@@ -22,32 +22,34 @@ Out of the box, it will behave as specified by PSR standards.
 To change behaviour, there are some modifiers available.
 These can be added as last argument in all `get` and `with` methods, plus the `toString` method.
 
-### `REQUIRE_PORT`
-
+| Name | Effect |
+| --- | --- |
+| `REQUIRE_PORT` |
 By PSR standard, if port is default for scheme it will be hidden.
 This options will attempt to always show the port.
 If set, it will be shown even if default. If not set, it will use default port (if available).
-
-### `ABSOLUTE_PATH`
-
+|
+| `ABSOLUTE_PATH` |
 Will cause paths to use absolute form, i.e. starting with `/`.
-
-### `NORMALIZE_PATH`
-
+|
+| `NORMALIZE_PATH` |
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
+|
 
 ### Examples
 
 ```php
+$uri = new Uri('http://example.com');
+$uri->getPath(Uri::REQUIRE_PORT); // => 80
+$uri->toString(Uri::REQUIRE_PORTH); // => 'http://example.com:80'
+
 $uri = new Uri('a/./path/../to//something');
 $uri->getPath(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something'
 $uri->toString(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something'
 
 $clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH);
 $clone->getPath(); // => '/path/somewhere'
-$uri->toString(; // => '/a/to/something'
 ```
-
 
 ## Classes
 

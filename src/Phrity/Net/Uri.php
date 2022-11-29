@@ -134,11 +134,11 @@ class Uri implements UriInterface
      */
     public function getHost(int $flags = 0): string
     {
-        $host = $this->getComponent('host');
-        if (!$this->isEmpty($host) && $flags & self::IDNA) {
+        $host = $this->getComponent('host') ?? '';
+        if ($flags & self::IDNA) {
             $host = $this->idna($host);
         }
-        return $this->isEmpty($host) ? '' : $host;
+        return $host;
     }
 
     /**
@@ -234,7 +234,7 @@ class Uri implements UriInterface
     public function withHost($host, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        if (!$this->isEmpty($host) && $flags & self::IDNA) {
+        if ($flags & self::IDNA) {
             $host = $this->idna($host);
         }
         $clone->setComponent('host', $host);

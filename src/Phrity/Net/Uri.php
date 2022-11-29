@@ -135,7 +135,7 @@ class Uri implements UriInterface
     public function getHost(int $flags = 0): string
     {
         $host = $this->getComponent('host');
-        if ($flags & self::IDNA) {
+        if (!$this->isEmpty($host) && $flags & self::IDNA) {
             $host = $this->idna($host);
         }
         return $this->isEmpty($host) ? '' : $host;
@@ -234,7 +234,7 @@ class Uri implements UriInterface
     public function withHost($host, int $flags = 0): UriInterface
     {
         $clone = clone $this;
-        if ($flags & self::IDNA) {
+        if (!$this->isEmpty($host) && $flags & self::IDNA) {
             $host = $this->idna($host);
         }
         $clone->setComponent('host', $host);
@@ -478,7 +478,7 @@ class Uri implements UriInterface
 
     private function idna(string $value): string
     {
-        if ($this->isEmpty($value) || !is_callable('idn_to_ascii')) {
+        if ($value === '' || !is_callable('idn_to_ascii')) {
             return $value; // Can't convert, but don't cause exception
         }
         return idn_to_ascii($value, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);

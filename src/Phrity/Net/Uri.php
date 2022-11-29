@@ -20,6 +20,7 @@ class Uri implements UriInterface
     public const REQUIRE_PORT = 1; // Always include port, explicit or default
     public const ABSOLUTE_PATH = 2; // Enforce absolute path
     public const NORMALIZE_PATH = 4; // Normalize path
+    public const IDNA = 8; // IDNA-convert host
 
     private const RE_MAIN = '!^(?P<schemec>(?P<scheme>[^:/?#]+):)?(?P<authorityc>//(?P<authority>[^/?#]*))?'
                           . '(?P<path>[^?#]*)(?P<queryc>\?(?P<query>[^#]*))?(?P<fragmentc>#(?P<fragment>.*))?$!';
@@ -107,7 +108,7 @@ class Uri implements UriInterface
      */
     public function getAuthority(int $flags = 0): string
     {
-        $host = $this->formatComponent($this->getComponent('host'));
+        $host = $this->formatComponent($this->getHost($flags));
         if ($this->isEmpty($host)) {
             return '';
         }
@@ -133,7 +134,11 @@ class Uri implements UriInterface
      */
     public function getHost(int $flags = 0): string
     {
-        return $this->getComponent('host') ?? '';
+        $host = $this->getComponent('host');
+        if (!$this->isEmpty($host) && $flags & self::IDNA) {
+            $host = $this->idna($host);
+        }
+        return $this->isEmpty($host) ? '' : $host;
     }
 
     /**
@@ -229,6 +234,9 @@ class Uri implements UriInterface
     public function withHost($host, int $flags = 0): UriInterface
     {
         $clone = clone $this;
+        if ($flags & self::IDNA) {
+            $host = $this->idna($host);
+        }
         $clone->setComponent('host', $host);
         return $clone;
     }
@@ -377,11 +385,11 @@ class Uri implements UriInterface
             case 'scheme':
                 $this->assertString($component, $value);
                 $this->assertpattern($component, $value, '/^[a-z][a-z0-9-+.]*$/i');
-                return strtolower($value);
+                return mb_strtolower($value);
             case 'host': // IP-literal / IPv4address / reg-name
                 $this->assertString($component, $value);
                 $this->authority = $this->authority || !$this->isEmpty($value);
-                return strtolower($value);
+                return mb_strtolower($value);
             case 'port':
                 $this->assertInteger($component, $value);
                 if ($value < 0 || $value > 65535) {
@@ -438,7 +446,7 @@ class Uri implements UriInterface
         }
     }
 
-    public function normalizePath(string $path): string
+    private function normalizePath(string $path): string
     {
         $result = [];
         preg_match_all('!([^/]*/|[^/]*$)!', $path, $items);
@@ -466,5 +474,13 @@ class Uri implements UriInterface
             }
         }
         return implode('', $result);
+    }
+
+    private function idna(string $value): string
+    {
+        if ($this->isEmpty($value) || !is_callable('idn_to_ascii')) {
+            return $value; // Can't convert, but don't cause exception
+        }
+        return idn_to_ascii($value, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
     }
 }

@@ -133,4 +133,19 @@ class UriExtensionsTest extends TestCase
         $clone = $uri->withPath('./path/to/../something/./else/..', Uri::NORMALIZE_PATH);
         $this->assertSame('path/something/', $clone->getPath());
     }
+
+    public function testIdnaHost(): void
+    {
+        // Get converted host
+        $uri = new Uri('https://ηßöø必Дあ.com');
+        $this->assertSame('ηßöø必дあ.com', $uri->getHost());
+        $this->assertSame('xn--zca0cg32z7rau82strvd.com', $uri->getHost(Uri::IDNA));
+        $this->assertSame('https://ηßöø必дあ.com', $uri->toString());
+        $this->assertSame('https://xn--zca0cg32z7rau82strvd.com', $uri->toString(Uri::IDNA));
+
+        // Should convert host on clone
+        $clone = $uri->withHost('ηßöø必дあ.com', Uri::IDNA);
+        $this->assertSame('xn--zca0cg32z7rau82strvd.com', $clone->getHost());
+        $this->assertSame('https://xn--zca0cg32z7rau82strvd.com', $clone->__toString());
+    }
 }

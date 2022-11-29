@@ -103,7 +103,7 @@ class UriTest extends TestCase
             ['#fragment'],
             ['./path1/../path2'],
             ['a://0:0@0/0?0#0'],
-            ['http://ηßöø必Дあ.com/'],
+            ['http://ηßöø必дあ.com/'],
             ['http://localhost'],
             ['localhost',],
             ['http://localhost'],
@@ -320,7 +320,7 @@ class UriTest extends TestCase
             [null, ''],
             ['', ''],
             ['MyDomain.COM', 'mydomain.com'],
-            ['ηßöø必Дあ.com', 'ηßöø必Дあ.com'],
+            ['ηßöø必Дあ.com', 'ηßöø必дあ.com'],
             ['[2a00:f48:1008::212:183:10]', '[2a00:f48:1008::212:183:10]'],
             ['127.0.0.1', '127.0.0.1'],
         ];

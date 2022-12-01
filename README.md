@@ -6,8 +6,8 @@
 Implementation of the [PSR-7 UriInterface](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
 and [PSR-17 UriFactoryInterface](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface) interfaces.
 
-Nothing fancy. Just working. Because I need a URI implementation **not** hadwired to HTTP messaging.
-And some extras. Allows all valid schemes.
+Nothing fancy. Just working. Because I need a URI implementation **not** hardwired to HTTP messaging.
+And some extras. Allow all valid schemes.
 
 ## Installation
 
@@ -26,7 +26,7 @@ These can be added as last argument in all `get` and `with` methods, plus the `t
 
 By PSR standard, if port is default for scheme it will be hidden.
 This options will attempt to always show the port.
-If set, it will be shown even if default. If not set, it will use default port (if available).
+If set, it will be shown even if default. If not set, it will use default port if resolvable.
 
 `ABSOLUTE_PATH`
 
@@ -92,7 +92,7 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
 
     // Additional methods
 
-    public function toString(int $flags = 0)): string;
+    public function toString(int $flags = 0): string;
 }
 ```
 

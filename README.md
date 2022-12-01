@@ -45,7 +45,7 @@ Will IDNA-convert host using non-ASCII characters.
 
 ```php
 $uri = new Uri('http://example.com');
-$uri->getPath(Uri::REQUIRE_PORT); // => 80
+$uri->getPort(Uri::REQUIRE_PORT); // => 80
 $uri->toString(Uri::REQUIRE_PORTH); // => 'http://example.com:80'
 
 $uri = new Uri('a/./path/../to//something');

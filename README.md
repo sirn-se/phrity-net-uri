@@ -36,6 +36,11 @@ Will cause paths to use absolute form, i.e. starting with `/`.
 
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
 
+`IDNA`
+
+Will IDNA-convert host using non-ASCII characters.
+
+
 ### Examples
 
 ```php
@@ -49,6 +54,9 @@ $uri->toString(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something
 
 $clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH);
 $clone->getPath(); // => '/path/somewhere'
+
+$uri = new Uri('https://ηßöø必Дあ.com');
+$uri->getHost(Uri::IDNA); // => 'xn--zca0cg32z7rau82strvd.com'
 ```
 
 
@@ -116,5 +124,6 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
-| `1.1` | `^7.4\|^8.0` | Modifiers |
+| `1.2` | `^7.4\|^8.0` | IDNA modifier |
+| `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |
 | `1.0` | `^7.4\|^8.0` | Initial version |

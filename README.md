@@ -124,6 +124,7 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
+| `1.3` | `^7.4\|^8.0` |  |
 | `1.2` | `^7.4\|^8.0` | IDNA modifier |
 | `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |
 | `1.0` | `^7.4\|^8.0` | Initial version |

@@ -82,7 +82,7 @@ class UriTest extends TestCase
         $this->assertSame($uri_string, (string) $uri);
     }
 
-    public function provideValidUris(): array
+    public static function provideValidUris(): array
     {
         return [
             ['urn:path-rootless'],
@@ -127,7 +127,7 @@ class UriTest extends TestCase
         $uri = new Uri($uri_string);
     }
 
-    public function provideInvalidUris(): array
+    public static function provideInvalidUris(): array
     {
         return [
             ['urn://host:with:colon'], // only colons within [] for ipv6
@@ -149,7 +149,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getPort());
     }
 
-    public function provideValidPorts(): array
+    public static function provideValidPorts(): array
     {
         return [
             [null, null],
@@ -168,7 +168,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withPort($port);
     }
 
-    public function provideInvalidPorts(): array
+    public static function provideInvalidPorts(): array
     {
         return [
             [100000],
@@ -198,7 +198,7 @@ class UriTest extends TestCase
         $this->assertSame("{$scheme}://domain.tld:{$port}", (string)$uri);
     }
 
-    public function provideDefaultPorts(): array
+    public static function provideDefaultPorts(): array
     {
         return [
             ['acap', 674],
@@ -272,7 +272,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getScheme());
     }
 
-    public function provideValidSchemes(): array
+    public static function provideValidSchemes(): array
     {
         return [
             [null, ''],
@@ -292,7 +292,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withScheme($scheme);
     }
 
-    public function provideInvalidSchemes(): array
+    public static function provideInvalidSchemes(): array
     {
         return [
             [[]],
@@ -314,7 +314,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getHost());
     }
 
-    public function provideValidHosts(): array
+    public static function provideValidHosts(): array
     {
         return [
             [null, ''],
@@ -335,7 +335,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withHost($host);
     }
 
-    public function provideInvalidHosts(): array
+    public static function provideInvalidHosts(): array
     {
         return [
             [[]],
@@ -354,7 +354,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getPath());
     }
 
-    public function provideValidPaths(): array
+    public static function provideValidPaths(): array
     {
         return [
             [null, ''],
@@ -381,7 +381,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withPath($path);
     }
 
-    public function provideInvalidPaths(): array
+    public static function provideInvalidPaths(): array
     {
         return [
             [[]],
@@ -408,7 +408,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getQuery());
     }
 
-    public function provideValidQueries(): array
+    public static function provideValidQueries(): array
     {
         return [
             [null, ''],
@@ -433,7 +433,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withQuery($query);
     }
 
-    public function provideInvalidQueries(): array
+    public static function provideInvalidQueries(): array
     {
         return [
             [[]],
@@ -452,7 +452,7 @@ class UriTest extends TestCase
         $this->assertSame($expected, $uri->getFragment());
     }
 
-    public function provideValidFragments(): array
+    public static function provideValidFragments(): array
     {
         return [
             [null, ''],
@@ -476,7 +476,7 @@ class UriTest extends TestCase
         $uri = (new Uri())->withFragment($fragment);
     }
 
-    public function provideInvalidFragments(): array
+    public static function provideInvalidFragments(): array
     {
         return [
             [[]],
@@ -497,7 +497,7 @@ class UriTest extends TestCase
         $this->assertSame("http://{$uri->getAuthority()}", (string)$uri);
     }
 
-    public function provideValidUserInfos(): array
+    public static function provideValidUserInfos(): array
     {
         return [
             [null, null, '', ''],

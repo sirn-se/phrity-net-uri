@@ -38,7 +38,7 @@ Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transfo
 
 `IDNA`
 
-Will IDNA-convert host using non-ASCII characters.
+Will IDNA-convert host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
 
 ### Examples
@@ -46,7 +46,7 @@ Will IDNA-convert host using non-ASCII characters.
 ```php
 $uri = new Uri('http://example.com');
 $uri->getPort(Uri::REQUIRE_PORT); // => 80
-$uri->toString(Uri::REQUIRE_PORTH); // => 'http://example.com:80'
+$uri->toString(Uri::REQUIRE_PORT); // => 'http://example.com:80'
 
 $uri = new Uri('a/./path/../to//something');
 $uri->getPath(Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // => '/a/to/something'

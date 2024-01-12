@@ -59,7 +59,7 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist
     - name: Code standard
-      run: vendor/bin/phpcs --standard=PSR1,PSR12 --encoding=UTF-8 --report=full --colors src tests examples
+      run: vendor/bin/phpcs --standard=PSR1,PSR12 --encoding=UTF-8 --report=full --colors src tests
 
   coverage:
     runs-on: ubuntu-latest

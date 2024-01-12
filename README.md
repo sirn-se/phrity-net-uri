@@ -100,6 +100,7 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
 
     // Additional methods
 
+    public function with(array $components, int $flags = 0): UriInterface;
     public function toString(int $flags = 0): string;
 }
 ```

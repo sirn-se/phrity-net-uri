@@ -158,14 +158,12 @@ class UriExtensionsTest extends TestCase
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
         $clone = $uri->with([
             'scheme' => 'https',
-            'user' => 'user',
-            'pass' => 'password',
+            'userInfo' => ['user', 'password'],
             'host' => 'new.domain.tld',
             'port' => 8080,
             'path' => 'new/path',
             'query' => 'new_query=2',
             'fragment' => 'new_fragment',
-            // 'userInfo' => 'user:pass',
         ]);
 
         $this->assertSame(

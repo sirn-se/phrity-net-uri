@@ -152,4 +152,35 @@ class UriExtensionsTest extends TestCase
         $clone = $uri->withHost('', Uri::IDNA);
         $this->assertSame('', $clone->getHost());
     }
+
+    public function testWithMethod(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
+        $clone = $uri->with([
+            'scheme' => 'https',
+            'user' => 'user',
+            'pass' => 'password',
+            'host' => 'new.domain.tld',
+            'port' => 8080,
+            'path' => 'new/path',
+            'query' => 'new_query=2',
+            'fragment' => 'new_fragment',
+            // 'userInfo' => 'user:pass',
+        ]);
+
+        $this->assertSame(
+            'https://user:password@new.domain.tld:8080/new/path?new_query=2#new_fragment',
+            $clone->toString()
+        );
+    }
+
+    public function testWithMethodInvalidComponent(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Invalid URI component: 'invalid'");
+        $clone = $uri->with([
+            'invalid' => 'invalid',
+        ]);
+    }
 }

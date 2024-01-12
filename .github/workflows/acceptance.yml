@@ -3,80 +3,36 @@ name: Acceptance
 on: [push, pull_request]
 
 jobs:
-  test-7-4:
-    runs-on: ubuntu-latest
-    name: Test PHP 7.4
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up PHP 7.4
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'
-    - name: Composer
-      run: make deps-install
-    - name: Test
-      run: make test
 
-  test-8-0:
+  test:
+    strategy:
+      matrix:
+        php-versions: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
     runs-on: ubuntu-latest
-    name: Test PHP 8.0
+    name: Unit test
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Set up PHP 8.0
+    - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.0'
-    - name: Composer
-      run: make deps-install
-    - name: Test
-      run: make test
-
-  test-8-1:
-    runs-on: ubuntu-latest
-    name: Test PHP 8.1
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up PHP 8.1
-      uses: shivammathur/setup-php@v2
+        php-version: ${{ matrix.php-versions }}
+        coverage: none
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+    - name: Cache dependencies
+      uses: actions/cache@v3
       with:
-        php-version: '8.1'
-    - name: Composer
-      run: make deps-install
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - name: Install dependencies
+      run: composer install --prefer-dist
     - name: Test
-      run: make test
-
-  test-8-2:
-    runs-on: ubuntu-latest
-    name: Test PHP 8.2
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up PHP 8.2
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-    - name: Composer
-      run: make deps-install
-    - name: Test
-      run: make test
-
-  test-8-3:
-    runs-on: ubuntu-latest
-    name: Test PHP 8.3
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up PHP 8.3
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.3'
-    - name: Composer
-      run: make deps-install
-    - name: Test
-      run: make test
+      run: vendor/bin/phpunit
 
   cs-check:
     runs-on: ubuntu-latest
@@ -84,14 +40,26 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Set up PHP 8.2
+    - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
-    - name: Composer
-      run: make deps-install
+        php-version: "8.2"
+        coverage: none
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - name: Install dependencies
+      run: composer install --prefer-dist
     - name: Code standard
-      run: make cs-check
+      run: vendor/bin/phpcs --standard=PSR1,PSR12 --encoding=UTF-8 --report=full --colors src tests examples
 
   coverage:
     runs-on: ubuntu-latest
@@ -99,14 +67,27 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Set up PHP 8.2
+    - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
-        extensions: xdebug
-    - name: Composer
-      run: make deps-install
-    - name: Code coverage
+        php-version: "8.2"
+        coverage: xdebug
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - name: Install dependencies
+      run: composer install --prefer-dist
+    - name: Code coverage build
+      run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+    - name: Code coverage upload
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: make coverage
+      run: vendor/bin/php-coveralls -v

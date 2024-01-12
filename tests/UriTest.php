@@ -12,6 +12,7 @@ namespace Phrity\Net;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface;
+use TypeError;
 
 class UriTest extends TestCase
 {
@@ -155,7 +156,6 @@ class UriTest extends TestCase
             [null, null],
             [0, 0],
             [65535, 65535],
-            ['0', 0],
         ];
     }
 
@@ -173,6 +173,22 @@ class UriTest extends TestCase
         return [
             [100000],
             [-23],
+        ];
+    }
+
+    /**
+     * @dataProvider provideInvalidPortTypes
+     */
+    public function testInvalidPortType($port): void
+    {
+        $this->expectException(TypeError::class);
+        $uri = (new Uri())->withPort($port);
+    }
+
+    public static function provideInvalidPortTypes(): array
+    {
+        return [
+            ['0'],
             [[]],
         ];
     }
@@ -275,7 +291,6 @@ class UriTest extends TestCase
     public static function provideValidSchemes(): array
     {
         return [
-            [null, ''],
             ['', ''],
             ['http', 'http'],
             ['h-t.+s', 'h-t.+s'],
@@ -295,10 +310,26 @@ class UriTest extends TestCase
     public static function provideInvalidSchemes(): array
     {
         return [
-            [[]],
             ['with space'],
             ['3http'],
             ['ηßöø必Дあ']
+        ];
+    }
+
+    /**
+     * @dataProvider provideInvalidSchemeTypes
+     */
+    public function testInvalidSchemeType($scheme): void
+    {
+        $this->expectException(TypeError::class);
+        $uri = (new Uri())->withScheme($scheme);
+    }
+
+    public static function provideInvalidSchemeTypes(): array
+    {
+        return [
+            [null],
+            [[]],
         ];
     }
 
@@ -317,7 +348,6 @@ class UriTest extends TestCase
     public static function provideValidHosts(): array
     {
         return [
-            [null, ''],
             ['', ''],
             ['MyDomain.COM', 'mydomain.com'],
             ['ηßöø必Дあ.com', 'ηßöø必дあ.com'],
@@ -327,17 +357,18 @@ class UriTest extends TestCase
     }
 
     /**
-     * @dataProvider provideInvalidHosts
+     * @dataProvider provideInvalidHostTypes
      */
-    public function testInvalidHost($host): void
+    public function testInvalidHosTypet($host): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $uri = (new Uri())->withHost($host);
     }
 
-    public static function provideInvalidHosts(): array
+    public static function provideInvalidHostTypes(): array
     {
         return [
+            [null],
             [[]],
         ];
     }
@@ -357,7 +388,6 @@ class UriTest extends TestCase
     public static function provideValidPaths(): array
     {
         return [
-            [null, ''],
             ['', ''],
             ['relative', 'relative'],
             ['/path/to//some///thing', '/path/to//some///thing'],
@@ -373,17 +403,18 @@ class UriTest extends TestCase
     }
 
     /**
-     * @dataProvider provideInvalidPaths
+     * @dataProvider provideInvalidPathTypes
      */
-    public function testInvalidPaths($path): void
+    public function testInvalidPathsType($path): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $uri = (new Uri())->withPath($path);
     }
 
-    public static function provideInvalidPaths(): array
+    public static function provideInvalidPathTypes(): array
     {
         return [
+            [null],
             [[]],
         ];
     }
@@ -411,7 +442,6 @@ class UriTest extends TestCase
     public static function provideValidQueries(): array
     {
         return [
-            [null, ''],
             ['', ''],
             ['with space', 'with%20space'],
             ['€', '%E2%82%AC'],
@@ -425,17 +455,18 @@ class UriTest extends TestCase
     }
 
     /**
-     * @dataProvider provideInvalidQueries
+     * @dataProvider provideInvalidQueryTypes
      */
-    public function testInvalidQuery($query): void
+    public function testInvalidQueryType($query): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $uri = (new Uri())->withQuery($query);
     }
 
-    public static function provideInvalidQueries(): array
+    public static function provideInvalidQueryTypes(): array
     {
         return [
+            [null],
             [[]],
         ];
     }
@@ -455,7 +486,6 @@ class UriTest extends TestCase
     public static function provideValidFragments(): array
     {
         return [
-            [null, ''],
             ['', ''],
             ['with space', 'with%20space'],
             ['€', '%E2%82%AC'],
@@ -468,17 +498,18 @@ class UriTest extends TestCase
     }
 
     /**
-     * @dataProvider provideInvalidFragments
+     * @dataProvider provideInvalidFragmentTypes
      */
-    public function testInvalidFragment($fragment): void
+    public function testInvalidFragmentType($fragment): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         $uri = (new Uri())->withFragment($fragment);
     }
 
-    public static function provideInvalidFragments(): array
+    public static function provideInvalidFragmentTypes(): array
     {
         return [
+            [null],
             [[]],
         ];
     }
@@ -500,7 +531,6 @@ class UriTest extends TestCase
     public static function provideValidUserInfos(): array
     {
         return [
-            [null, null, '', ''],
             ['', '', '', ''],
             ['user', '', 'user', '@'],
             ['user', 'pass', 'user:pass', '@'],
@@ -508,6 +538,22 @@ class UriTest extends TestCase
             ['with space', 'with%20space', 'with%20space:with%20space', '@'],
             ['.-_~!$&\'()*+,;=:@', '.-_~!$&\'()*+,;=:@', '.-_~!$&\'()*+,;=:@:.-_~!$&\'()*+,;=:@', '@'],
             ['ηßöø', '必Дあ', '%CE%B7%C3%9F%C3%B6%C3%B8:%E5%BF%85%D0%94%E3%81%82', '@'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideInvalidUserInfoTypes
+     */
+    public function testInvalidUserInfoType($user, $pass, $expected, $include): void
+    {
+        $this->expectException(TypeError::class);
+        $uri = (new Uri('http://domain.tld'))->withUserInfo($user, $pass);
+    }
+
+    public static function provideInvalidUserInfoTypes(): array
+    {
+        return [
+            [null, null, '', ''],
         ];
     }
 }

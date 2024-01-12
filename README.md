@@ -79,20 +79,20 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
     public function getAuthority(int $flags = 0): string;
     public function getUserInfo(int $flags = 0): string;
     public function getHost(int $flags = 0): string;
-    public function getPort(int $flags = 0): ?int;
+    public function getPort(int $flags = 0): int|null;
     public function getPath(int $flags = 0): string;
     public function getQuery(int $flags = 0): string;
     public function getFragment(int $flags = 0): string;
 
     // PSR-7 setters
 
-    public function withScheme($scheme, int $flags = 0): UriInterface;
-    public function withUserInfo($user, $password = null, int $flags = 0): UriInterface;
-    public function withHost($host, int $flags = 0): UriInterface;
-    public function withPort($port, int $flags = 0): UriInterface;
-    public function withPath($path, int $flags = 0): UriInterface;
-    public function withQuery($query, int $flags = 0): UriInterface;
-    public function withFragment($fragment, int $flags = 0): UriInterface;
+    public function withScheme(string $scheme, int $flags = 0): UriInterface;
+    public function withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface;
+    public function withHost(string $host, int $flags = 0): UriInterface;
+    public function withPort(int|null $port, int $flags = 0): UriInterface;
+    public function withPath(string $path, int $flags = 0): UriInterface;
+    public function withQuery(string $query, int $flags = 0): UriInterface;
+    public function withFragment(string $fragment, int $flags = 0): UriInterface;
 
     // PSR-7 string representation
 
@@ -124,6 +124,7 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
+| `2.0` | `^7.4\|^8.0` | Strict types |
 | `1.3` | `^7.4\|^8.0` |  |
 | `1.2` | `^7.4\|^8.0` | IDNA modifier |
 | `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |

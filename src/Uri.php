@@ -361,7 +361,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         return array_filter([
             'scheme' => $this->getScheme($flags),
             'host' => $this->getHost($flags),
-            'port' => $this->getPort($flags),
+            'port' => $this->getPort($flags | self::REQUIRE_PORT),
             'user' => $this->user,
             'pass' => $this->pass,
             'path' => $this->getPath($flags),
@@ -626,7 +626,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         foreach ($b as $key => $value) {
             if (is_int($key)) {
                 $a[] = $value;
-            } elseif (array_key_exists($key, $a) && is_array($a[$key])) {
+            } elseif (array_key_exists($key, $a) && is_array($a[$key]) && is_array($b[$key])) {
                 $a[$key] = $this->merge($a[$key], $b[$key]);
             } else {
                 $a[$key] = $b[$key];

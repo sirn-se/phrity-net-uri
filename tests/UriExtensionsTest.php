@@ -12,6 +12,8 @@ namespace Phrity\Net;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface;
+use JsonSerializable;
+use Stringable;
 
 class UriExtensionsTest extends TestCase
 {
@@ -180,5 +182,67 @@ class UriExtensionsTest extends TestCase
         $clone = $uri->with([
             'invalid' => 'invalid',
         ]);
+    }
+
+    public function testStringable(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
+        $this->assertInstanceOf(Stringable::class, $uri);
+        $this->assertSame('http://domain.tld/path?query=1#fragment', $uri->__toString());
+    }
+
+    public function testJsonSerializable(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
+        $this->assertInstanceOf(JsonSerializable::class, $uri);
+        $this->assertSame('http://domain.tld/path?query=1#fragment', $uri->jsonSerialize());
+        $this->assertSame('"http:\/\/domain.tld\/path?query=1#fragment"', json_encode($uri));
+    }
+
+    public function testComponents(): void
+    {
+        $uri_str = 'http://domain.tld:80/path?query=1#fragment';
+        $uri = new Uri($uri_str);
+        $this->assertEquals([
+            'scheme' => 'http',
+            'host' => 'domain.tld',
+            'port' => 80,
+            'path' => '/path',
+            'query' => 'query=1',
+            'fragment' => 'fragment',
+        ], $uri->getComponents());
+        $this->assertEquals(parse_url($uri_str), $uri->getComponents());
+    }
+
+    public function testQueryHelpers(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?arr%5B0%5D=arr1&arr%5B1%5D=arr2#fragment');
+        $this->assertEquals([
+            'arr' => ['arr1', 'arr2']
+        ], $uri->getQueryItems());
+        $this->assertEquals(['arr1', 'arr2'], $uri->getQueryItem('arr'));
+        $uri = $uri->withQueryItems([
+            'arr' => ['arr3'],
+            'assarr' => ['ass1' => 'ass1', 'ass2' => 'ass2'],
+            'str' => 'str1',
+        ]);
+        $this->assertEquals([
+            'arr' => ['arr1', 'arr2', 'arr3'],
+            'assarr' => ['ass1' => 'ass1', 'ass2' => 'ass2'],
+            'str' => 'str1',
+        ], $uri->getQueryItems());
+        $uri = $uri->withQueryItem('assarr', ['ass1' => 'ass1-new', 'ass3' => 'ass3']);
+        $this->assertEquals([
+            'arr' => ['arr1', 'arr2', 'arr3'],
+            'assarr' => ['ass1' => 'ass1-new', 'ass2' => 'ass2', 'ass3' => 'ass3'],
+            'str' => 'str1',
+        ], $uri->getQueryItems());
+        $uri = $uri->withQueryItems([
+            'assarr' => null,
+            'str' => null,
+        ]);
+        $this->assertEquals([
+            'arr' => ['arr1', 'arr2', 'arr3'],
+        ], $uri->getQueryItems());
     }
 }

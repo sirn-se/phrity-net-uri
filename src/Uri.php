@@ -10,25 +10,28 @@
 namespace Phrity\Net;
 
 use InvalidArgumentException;
+use JsonSerializable;
 use Psr\Http\Message\UriInterface;
+use Stringable;
 use TypeError;
 
 /**
  * Net\Uri class.
  */
-class Uri implements UriInterface
+class Uri implements JsonSerializable, Stringable, UriInterface
 {
     public const REQUIRE_PORT = 1; // Always include port, explicit or default
     public const ABSOLUTE_PATH = 2; // Enforce absolute path
     public const NORMALIZE_PATH = 4; // Normalize path
     public const IDNA = 8; // IDNA-convert host
+    public const RFC1738 = 16; // Use RFC1738 encoding (RFC3986 is default)
 
     private const RE_MAIN = '!^(?P<schemec>(?P<scheme>[^:/?#]+):)?(?P<authorityc>//(?P<authority>[^/?#]*))?'
                           . '(?P<path>[^?#]*)(?P<queryc>\?(?P<query>[^#]*))?(?P<fragmentc>#(?P<fragment>.*))?$!';
     private const RE_AUTH = '!^(?P<userinfoc>(?P<user>[^:/?#]+)(?P<passc>:(?P<pass>[^:/?#]+))?@)?'
                           . '(?P<host>[^:/?#]*|\[[^/?#]*\])(?P<portc>:(?P<port>[0-9]*))?$!';
 
-    private static $port_defaults = [
+    private static array $port_defaults = [
         'acap' => 674,
         'afp' => 548,
         'dict' => 2628,
@@ -71,15 +74,15 @@ class Uri implements UriInterface
         'wss' => 443,
     ];
 
-    private $scheme = '';
-    private $authority = false;
-    private $host = '';
-    private $port = null;
-    private $user = '';
-    private $pass = null;
-    private $path = '';
-    private $query = '';
-    private $fragment = '';
+    private string $scheme = '';
+    private bool $authority = false;
+    private string $host = '';
+    private int|null $port = null;
+    private string $user = '';
+    private string|null $pass = null;
+    private string $path = '';
+    private string $query = '';
+    private string $fragment = '';
 
     /**
      * Create new URI instance using a string
@@ -221,7 +224,7 @@ class Uri implements UriInterface
      * @param int $flags Optional modifier flags
      * @return static A new instance with the specified user information
      */
-    public function withUserInfo(string $user, ?string $password = null, int $flags = 0): UriInterface
+    public function withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface
     {
         $clone = $this->clone($flags);
         $clone->setUserInfo($user, $password);
@@ -249,7 +252,7 @@ class Uri implements UriInterface
      * @return static A new instance with the specified port
      * @throws \InvalidArgumentException for invalid ports
      */
-    public function withPort(?int $port, int $flags = 0): UriInterface
+    public function withPort(int|null $port, int $flags = 0): UriInterface
     {
         $clone = $this->clone($flags);
         $clone->setPort($port, $flags);
@@ -298,7 +301,7 @@ class Uri implements UriInterface
     }
 
 
-    // ---------- PSR-7 string ----------------------------------------------------------------------------------------
+    // ---------- PSR-7 string & Stringable ---------------------------------------------------------------------------
 
     /**
      * Return the string representation as a URI reference.
@@ -310,12 +313,24 @@ class Uri implements UriInterface
     }
 
 
+    // ---------- JsonSerializable ------------------------------------------------------------------------------------
+
+    /**
+     * Return JSON encode value as URI reference.
+     * @return string
+     */
+    public function jsonSerialize(): string
+    {
+        return $this->toString();
+    }
+
+
     // ---------- Extensions ------------------------------------------------------------------------------------------
 
     /**
      * Return the string representation as a URI reference.
      * @param int $flags Optional modifier flags
-     * @param istring $format Optional format specification
+     * @param tring $format Optional format specification
      * @return string
      */
     public function toString(int $flags = 0, string $format = '{scheme}{authority}{path}{query}{fragment}'): string
@@ -328,7 +343,7 @@ class Uri implements UriInterface
             '{query}',
             '{fragment}',
         ], [
-            $this->formatComponent($this->getScheme(), '', ':'),
+            $this->formatComponent($this->getScheme($flags), '', ':'),
             $this->authority ? "//{$this->formatComponent($this->getAuthority($flags))}" : '',
             $this->formatComponent($this->getPath($path_flags)),
             $this->formatComponent($this->getQuery(), '?'),
@@ -337,7 +352,26 @@ class Uri implements UriInterface
     }
 
     /**
-     * Return the string representation as a URI reference.
+     * Get compontsns as array; as parse_url() metohd
+     * @param int $flags Optional modifier flags
+     * @return array
+     */
+    public function getComponents(int $flags = 0): array
+    {
+        return array_filter([
+            'scheme' => $this->getScheme($flags),
+            'host' => $this->getHost($flags),
+            'port' => $this->getPort($flags),
+            'user' => $this->user,
+            'pass' => $this->pass,
+            'path' => $this->getPath($flags),
+            'query' => $this->getQuery($flags),
+            'fragment' => $this->getFragment($flags),
+        ]);
+    }
+
+    /**
+     * Return an instance with the specified compontents set.
      * @return static A new instance with the specified components
      */
     public function with(array $components, int $flags = 0): UriInterface
@@ -373,10 +407,58 @@ class Uri implements UriInterface
         return $clone;
     }
 
+    /**
+     * Return all query items (if any) as associative array.
+     * @param int $flags Optional modifier flags
+     * @return array Query items
+     */
+    public function getQueryItems(int $flags = 0): array
+    {
+        parse_str($this->getQuery(), $result);
+        return $result;
+    }
 
-    // ---------- Private helper methods ------------------------------------------------------------------------------
+    /**
+     * Return query item value for named query item, or null if not present.
+     * @param string $name Name of query item to retrieve
+     * @param int $flags Optional modifier flags
+     * @return array|string|null Query item value
+     */
+    public function getQueryItem(string $name, int $flags = 0): array|string|null
+    {
+        parse_str($this->getQuery(), $result);
+        return $result[$name] ?? null;
+    }
 
-    private function setPort(?int $port, int $flags = 0): void
+    /**
+     * Add query items as associative array that will be merged qith current items.
+     * @param array $items Array of query items to add
+     * @param int $flags Optional modifier flags
+     * @return static A new instance with the added query items
+     */
+    public function withQueryItems(array $items, int $flags = 0): UriInterface
+    {
+        $clone = $this->clone($flags);
+        $clone->setQuery(http_build_query($this->merge($this->getQueryItems($flags), $items)), $flags);
+        return $clone;
+    }
+
+    /**
+     * Add query item value for named query item
+     * @param string $name Name of query item to add
+     * @param array|string|null $value Value of query item to add
+     * @param int $flags Optional modifier flags
+     * @return static A new instance with the added query items
+     */
+    public function withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface
+    {
+        return $this->withQueryItems([$name => $value], $flags);
+    }
+
+
+    // ---------- Protected helper methods ----------------------------------------------------------------------------
+
+    protected function setPort(int|null $port, int $flags = 0): void
     {
         if ($port !== null && ($port < 0 || $port > 65535)) {
             throw new InvalidArgumentException("Invalid port '{$port}'");
@@ -384,7 +466,7 @@ class Uri implements UriInterface
         $this->port = $port;
     }
 
-    private function setScheme(string $scheme, int $flags = 0): void
+    protected function setScheme(string $scheme, int $flags = 0): void
     {
         $pattern = '/^[a-z][a-z0-9-+.]*$/i';
         if ($scheme !== '' && preg_match($pattern, $scheme) == 0) {
@@ -393,7 +475,7 @@ class Uri implements UriInterface
         $this->scheme = mb_strtolower($scheme);
     }
 
-    private function setHost(string $host, int $flags = 0): void
+    protected function setHost(string $host, int $flags = 0): void
     {
         $this->authority = $this->authority || $host !== '';
         if ($flags & self::IDNA) {
@@ -402,7 +484,7 @@ class Uri implements UriInterface
         $this->host = mb_strtolower($host);
     }
 
-    private function setPath(string $path, int $flags = 0): void
+    protected function setPath(string $path, int $flags = 0): void
     {
         if ($flags & self::NORMALIZE_PATH) {
             $path = $this->normalizePath($path);
@@ -410,34 +492,37 @@ class Uri implements UriInterface
         if ($flags & self::ABSOLUTE_PATH && substr($path, 0, 1) !== '/') {
             $path = "/{$path}";
         }
-        $this->path = $this->encode($path);
+        $this->path = $this->encode($path, $flags);
     }
 
-    private function setQuery(string $query, int $flags = 0): void
+    protected function setQuery(string $query, int $flags = 0): void
     {
-        $this->query = $this->encode($query, '?');
+        $this->query = $this->encode($query, $flags, '?');
     }
 
-    private function setFragment(string $fragment, int $flags = 0): void
+    protected function setFragment(string $fragment, int $flags = 0): void
     {
-        $this->fragment = $this->encode($fragment, '?');
+        $this->fragment = $this->encode($fragment, $flags, '?');
     }
 
-    private function setUser(string $user, int $flags = 0): void
+    protected function setUser(string $user, int $flags = 0): void
     {
-        $this->user = $this->encode($user, '?');
+        $this->user = $this->encode($user, $flags, '?');
     }
 
-    private function setPassword(?string $pass, int $flags = 0): void
+    protected function setPassword(string|null $pass, int $flags = 0): void
     {
-        $this->pass = $pass === null ? null : $this->encode($pass, '?');
+        $this->pass = $pass === null ? null : $this->encode($pass, $flags, '?');
     }
 
-    private function setUserInfo(string $user = '', ?string $pass = null, int $flags = 0): void
+    protected function setUserInfo(string $user = '', string|null $pass = null, int $flags = 0): void
     {
         $this->setUser($user);
         $this->setPassword($pass);
     }
+
+
+    // ---------- Private helper methods ------------------------------------------------------------------------------
 
     private function parse(string $uri_string = ''): void
     {
@@ -474,25 +559,26 @@ class Uri implements UriInterface
         return $clone;
     }
 
-    private function encode(string $source, string $keep = ''): string
+    private function encode(string $source, int $flags = 0, string $keep = ''): string
     {
+        $encode = $flags & self::RFC1738 ? 'urlencode' : 'rawurlencode';
         $exclude = "[^%\/:=&!\$'()*+,;@{$keep}]+";
         $exp = "/(%{$exclude})|({$exclude})/";
-        return preg_replace_callback($exp, function ($matches) {
+        return preg_replace_callback($exp, function ($matches) use ($encode) {
             if ($e = preg_match('/^(%[0-9a-fA-F]{2})/', $matches[0], $m)) {
-                return substr($matches[0], 0, 3) . rawurlencode(substr($matches[0], 3));
+                return substr($matches[0], 0, 3) . $encode(substr($matches[0], 3));
             } else {
-                return rawurlencode($matches[0]);
+                return $encode($matches[0]);
             }
         }, $source);
     }
 
-    private function formatComponent($value, string $before = '', string $after = ''): string
+    private function formatComponent(mixed $value, string $before = '', string $after = ''): string
     {
         return $this->isEmpty($value) ? '' : "{$before}{$value}{$after}";
     }
 
-    private function isEmpty($value): bool
+    private function isEmpty(mixed $value): bool
     {
         return is_null($value) || $value === '';
     }
@@ -533,5 +619,19 @@ class Uri implements UriInterface
             return $value; // Can't convert, but don't cause exception
         }
         return idn_to_ascii($value, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
+    }
+
+    private function merge(array $a, array $b): array
+    {
+        foreach ($b as $key => $value) {
+            if (is_int($key)) {
+                $a[] = $value;
+            } elseif (array_key_exists($key, $a) && is_array($a[$key])) {
+                $a[$key] = $this->merge($a[$key], $b[$key]);
+            } else {
+                $a[$key] = $b[$key];
+            }
+        }
+        return $a;
     }
 }

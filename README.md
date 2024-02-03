@@ -40,6 +40,10 @@ Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transfo
 
 Will IDNA-convert host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
+`RFC1738`
+
+Will use RFC 1738 encoding (spaces encoded as `+`). Encoding by RFC 3986 (spaces encoded as `%20`) is default.
+
 
 ### Examples
 
@@ -67,7 +71,7 @@ There are two available classes, `Uri` and `UriFactory`.
 ### The Uri class
 
 ```php
-class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
+class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\UriInterface
 {
     // Constructor
 
@@ -94,12 +98,24 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
     public function withQuery(string $query, int $flags = 0): UriInterface;
     public function withFragment(string $fragment, int $flags = 0): UriInterface;
 
-    // PSR-7 string representation
+    // PSR-7 string representation & Stringable
 
     public function __toString(): string;
 
+    // JsonSerializable
+
+    public function jsonSerialize(): string;
+
+    // Additional query methods
+
+    public function getQueryItems(int $flags = 0): array;
+    public function getQueryItem(string $name, int $flags = 0): array|string|null;
+    public function withQueryItems(array $items, int $flags = 0): UriInterface;
+    public function withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface;
+
     // Additional methods
 
+    public function getComponents(int $flags = 0): array;
     public function with(array $components, int $flags = 0): UriInterface;
     public function toString(int $flags = 0): string;
 }
@@ -117,6 +133,10 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
     // PSR-17 factory
 
     public function createUri(string $uri = ''): UriInterface;
+
+    // Additional methods
+
+    public function createUriFromInterface(UriInterface $uri): UriInterface;
 }
 ```
 
@@ -125,7 +145,7 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
-| `2.0` | `^7.4\|^8.0` | Strict types |
+| `2.0` | `^8.0` | Query helpers, with([]) and getComponents() methods |
 | `1.3` | `^7.4\|^8.0` |  |
 | `1.2` | `^7.4\|^8.0` | IDNA modifier |
 | `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |

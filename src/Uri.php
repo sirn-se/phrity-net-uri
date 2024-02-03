@@ -224,8 +224,7 @@ class Uri implements UriInterface
     public function withUserInfo(string $user, ?string $password = null, int $flags = 0): UriInterface
     {
         $clone = $this->clone($flags);
-        $clone->setUser($user, $flags);
-        $clone->setPassword($password, $flags);
+        $clone->setUserInfo($user, $password);
         return $clone;
     }
 

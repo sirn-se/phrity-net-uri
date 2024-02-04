@@ -148,6 +148,9 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         if ($flags & self::IDN_ENCODE) {
             return $this->idnEncode($this->host);
         }
+        if ($flags & self::IDN_DECODE) {
+            return $this->idnDecode($this->host);
+        }
         return $this->host;
     }
 
@@ -483,6 +486,9 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         $this->authority = $this->authority || $host !== '';
         if ($flags & self::IDN_ENCODE) {
             $host = $this->idnEncode($host);
+        }
+        if ($flags & self::IDN_DECODE) {
+            $host = $this->idnDecode($host);
         }
         $this->host = mb_strtolower($host);
     }

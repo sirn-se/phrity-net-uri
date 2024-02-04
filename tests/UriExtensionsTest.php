@@ -155,6 +155,26 @@ class UriExtensionsTest extends TestCase
         $this->assertSame('', $clone->getHost());
     }
 
+    public function testIdnDecodeHost(): void
+    {
+        // Get converted host
+        $uri = new Uri('https://xn--zca0cg32z7rau82strvd.com');
+        $this->assertSame('xn--zca0cg32z7rau82strvd.com', $uri->getHost());
+
+        $this->assertSame('ηßöø必дあ.com', $uri->getHost(Uri::IDN_DECODE));
+        $this->assertSame('https://xn--zca0cg32z7rau82strvd.com', $uri->toString());
+        $this->assertSame('https://ηßöø必дあ.com', $uri->toString(Uri::IDN_DECODE));
+
+        // Should convert host on clone
+        $clone = $uri->withHost('xn--zca0cg32z7rau82strvd.com', Uri::IDN_DECODE);
+        $this->assertSame('ηßöø必дあ.com', $clone->getHost());
+        $this->assertSame('https://ηßöø必дあ.com', $clone->__toString());
+
+        // Should not attempt conversion
+        $clone = $uri->withHost('', Uri::IDN_DECODE);
+        $this->assertSame('', $clone->getHost());
+    }
+
     public function testWithMethod(): void
     {
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');

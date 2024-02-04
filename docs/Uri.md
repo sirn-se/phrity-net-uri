@@ -293,9 +293,9 @@ All `get`, `with` and the `toString()` methods accept option flags.
 
 ### Host options
 
-#### The `IDN_ENCODE` option
+#### The `IDN_ENCODE` and `IDN_DECODE` options
 
-Using this option will IDN-encode host using non-ASCII characters.
+Using `IDN_ENCODE` option will IDN-encode host using non-ASCII characters.
 Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
 ```php
@@ -310,6 +310,23 @@ $uri->toString(Uri::IDN_ENCODE); // -> "https://xn--zca0cg32z7rau82strvd.com"
 $clone = $uri->withHost('œüç∂', Uri::IDN_ENCODE);
 $clone->getHost(); // -> "xn--7ca5b9p776i"
 echo "{$clone} \n"; // -> "https://xn--7ca5b9p776i"
+```
+
+Using `IDN_DECODE` option will IDN-decode host previously encoded to ASCII-only  characters.
+Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
+
+```php
+$uri = new Uri('https://xn--zca0cg32z7rau82strvd.com');
+
+$uri->getHost(); // -> "xn--zca0cg32z7rau82strvd.com"
+$uri->toString(); // -> "https://xn--zca0cg32z7rau82strvd.com"
+
+$uri->getHost(Uri::IDN_DECODE); // -> "ηßöø必Дあ.com"
+$uri->toString(Uri::IDN_DECODE); // -> "https://xηßöø必Дあ.com"
+
+$clone = $uri->withHost('xn--7ca5b9p776i', Uri::IDN_DECODE);
+$clone->getHost(); // -> "œüç∂"
+echo "{$clone} \n"; // -> "https://œüç∂"
 ```
 
 ### Port options

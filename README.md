@@ -36,7 +36,7 @@ Will cause paths to use absolute form, i.e. starting with `/`.
 
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
 
-`IDN_ENCODE`
+`IDN_ENCODE` + `IDN_ENCODE`
 
 Will IDN-encode host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
@@ -145,7 +145,7 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
-| `2.0` | `^8.0` | Query helpers, with([]) and getComponents() methods |
+| `2.0` | `^8.0` | Query helpers, with([]) and getComponents() methods, IDN encode/decode |
 | `1.3` | `^7.4\|^8.0` |  |
 | `1.2` | `^7.4\|^8.0` | IDNA modifier |
 | `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |

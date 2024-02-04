@@ -153,7 +153,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
      * @param int $flags Optional modifier flags
      * @return null|int The URI port
      */
-    public function getPort(int $flags = 0): ?int
+    public function getPort(int $flags = 0): int|null
     {
         $default = self::$port_defaults[$this->scheme] ?? null;
         if ($flags & self::REQUIRE_PORT) {

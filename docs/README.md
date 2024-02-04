@@ -268,10 +268,6 @@ echo "{$clone->getUserInfo()} \n"; // -> "username:password"
 echo "{$clone} \n"; // -> "http://username:password@example.com"
 ```
 
-
-
-
-
 ### Authority
 
 The authority part of URI may consist of host, port, username and password.
@@ -290,7 +286,6 @@ echo "{$uri->getAuthority()} \n"; // -> ""
 $uri = new Uri('https://user:pwd@domain.tld:1234/path/to/file.html?query=1#fragment');
 echo "{$uri->getAuthority()} \n"; // -> "user:pwd@domain.tld:1234"
 ```
-
 
 ## Method flags
 

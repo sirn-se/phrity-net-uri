@@ -23,8 +23,11 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     public const REQUIRE_PORT = 1; // Always include port, explicit or default
     public const ABSOLUTE_PATH = 2; // Enforce absolute path
     public const NORMALIZE_PATH = 4; // Normalize path
-    public const IDNA = 8; // IDNA-convert host
-    public const RFC1738 = 16; // Use RFC1738 encoding (RFC3986 is default)
+    public const IDN_ENCODE = 8; // IDN-encode host
+    public const IDN_DECODE = 16; // IDN-decode host
+    public const IDNA = 8; // @deprecated, replaced by IDN_ENCODE
+    public const RFC1738_ENCODE = 32; // Enforce RFC1738 encoding
+    public const RFC3986_ENCODE = 64; // Enforce RFC3986 encoding
 
     private const RE_MAIN = '!^(?P<schemec>(?P<scheme>[^:/?#]+):)?(?P<authorityc>//(?P<authority>[^/?#]*))?'
                           . '(?P<path>[^?#]*)(?P<queryc>\?(?P<query>[^#]*))?(?P<fragmentc>#(?P<fragment>.*))?$!';
@@ -142,8 +145,8 @@ class Uri implements JsonSerializable, Stringable, UriInterface
      */
     public function getHost(int $flags = 0): string
     {
-        if ($flags & self::IDNA) {
-            return $this->idna($this->host);
+        if ($flags & self::IDN_ENCODE) {
+            return $this->idnEncode($this->host);
         }
         return $this->host;
     }
@@ -153,7 +156,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
      * @param int $flags Optional modifier flags
      * @return null|int The URI port
      */
-    public function getPort(int $flags = 0): ?int
+    public function getPort(int $flags = 0): int|null
     {
         $default = self::$port_defaults[$this->scheme] ?? null;
         if ($flags & self::REQUIRE_PORT) {
@@ -478,8 +481,8 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     protected function setHost(string $host, int $flags = 0): void
     {
         $this->authority = $this->authority || $host !== '';
-        if ($flags & self::IDNA) {
-            $host = $this->idna($host);
+        if ($flags & self::IDN_ENCODE) {
+            $host = $this->idnEncode($host);
         }
         $this->host = mb_strtolower($host);
     }
@@ -561,7 +564,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
 
     private function encode(string $source, int $flags = 0, string $keep = ''): string
     {
-        $encode = $flags & self::RFC1738 ? 'urlencode' : 'rawurlencode';
+        $encode = $flags & self::RFC1738_ENCODE ? 'urlencode' : 'rawurlencode';
         $exclude = "[^%\/:=&!\$'()*+,;@{$keep}]+";
         $exp = "/(%{$exclude})|({$exclude})/";
         return preg_replace_callback($exp, function ($matches) use ($encode) {
@@ -613,12 +616,20 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         return implode('', $result);
     }
 
-    private function idna(string $value): string
+    private function idnEncode(string $value): string
     {
         if ($value === '' || !is_callable('idn_to_ascii')) {
             return $value; // Can't convert, but don't cause exception
         }
         return idn_to_ascii($value, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
+    }
+
+    private function idnDecode(string $value): string
+    {
+        if ($value === '' || !is_callable('idn_to_utf8')) {
+            return $value; // Can't convert, but don't cause exception
+        }
+        return idn_to_utf8($value, IDNA_NONTRANSITIONAL_TO_UNICODE, INTL_IDNA_VARIANT_UTS46);
     }
 
     private function merge(array $a, array $b): array

@@ -29,6 +29,6 @@
         "squizlabs/php_codesniffer": "^3.0"
     },
     "suggest": {
-        "ext-intl": "Enables IDNA suppoert for non-ascii domains"
+        "ext-intl": "Enables IDN conversion for non-ASCII domains"
     }
 }

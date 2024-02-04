@@ -36,9 +36,9 @@ Will cause paths to use absolute form, i.e. starting with `/`.
 
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
 
-`IDNA`
+`IDN_ENCODE`
 
-Will IDNA-convert host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
+Will IDN-encode host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
 `RFC1738`
 
@@ -60,7 +60,7 @@ $clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NO
 $clone->getPath(); // => '/path/somewhere'
 
 $uri = new Uri('https://ηßöø必Дあ.com');
-$uri->getHost(Uri::IDNA); // => 'xn--zca0cg32z7rau82strvd.com'
+$uri->getHost(Uri::IDN_ENCODE); // => 'xn--zca0cg32z7rau82strvd.com'
 ```
 
 

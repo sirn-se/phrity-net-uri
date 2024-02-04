@@ -19,6 +19,8 @@ use Psr\Http\Message\{
  */
 class UriFactory implements UriFactoryInterface
 {
+    // ---------- PSR-7 methods ---------------------------------------------------------------------------------------
+
     /**
      * Create a new URI.
      * @param string $uri The URI to parse.
@@ -27,5 +29,18 @@ class UriFactory implements UriFactoryInterface
     public function createUri(string $uri = ''): UriInterface
     {
         return new Uri($uri);
+    }
+
+
+    // ---------- Extensions ------------------------------------------------------------------------------------------
+
+    /**
+     * Create a new URI from existing.
+     * @param UriInterface $uri A URI instance to create from.
+     * @throws \InvalidArgumentException If the given URI cannot be parsed
+     */
+    public function createUriFromInterface(UriInterface $uri): UriInterface
+    {
+        return new Uri($uri->__toString());
     }
 }

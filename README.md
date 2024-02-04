@@ -36,9 +36,13 @@ Will cause paths to use absolute form, i.e. starting with `/`.
 
 Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
 
-`IDNA`
+`IDN_ENCODE` + `IDN_ENCODE`
 
-Will IDNA-convert host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
+Will IDN-encode host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
+
+`RFC1738`
+
+Will use RFC 1738 encoding (spaces encoded as `+`). Encoding by RFC 3986 (spaces encoded as `%20`) is default.
 
 
 ### Examples
@@ -56,7 +60,7 @@ $clone = $uri->withPath('path/./somewhere/else/..', Uri::ABSOLUTE_PATH | Uri::NO
 $clone->getPath(); // => '/path/somewhere'
 
 $uri = new Uri('https://ηßöø必Дあ.com');
-$uri->getHost(Uri::IDNA); // => 'xn--zca0cg32z7rau82strvd.com'
+$uri->getHost(Uri::IDN_ENCODE); // => 'xn--zca0cg32z7rau82strvd.com'
 ```
 
 
@@ -67,7 +71,7 @@ There are two available classes, `Uri` and `UriFactory`.
 ### The Uri class
 
 ```php
-class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
+class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\UriInterface
 {
     // Constructor
 
@@ -79,27 +83,40 @@ class Phrity\Net\Uri implements Psr\Http\Message\UriInterface
     public function getAuthority(int $flags = 0): string;
     public function getUserInfo(int $flags = 0): string;
     public function getHost(int $flags = 0): string;
-    public function getPort(int $flags = 0): ?int;
+    public function getPort(int $flags = 0): int|null;
     public function getPath(int $flags = 0): string;
     public function getQuery(int $flags = 0): string;
     public function getFragment(int $flags = 0): string;
 
     // PSR-7 setters
 
-    public function withScheme($scheme, int $flags = 0): UriInterface;
-    public function withUserInfo($user, $password = null, int $flags = 0): UriInterface;
-    public function withHost($host, int $flags = 0): UriInterface;
-    public function withPort($port, int $flags = 0): UriInterface;
-    public function withPath($path, int $flags = 0): UriInterface;
-    public function withQuery($query, int $flags = 0): UriInterface;
-    public function withFragment($fragment, int $flags = 0): UriInterface;
+    public function withScheme(string $scheme, int $flags = 0): UriInterface;
+    public function withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface;
+    public function withHost(string $host, int $flags = 0): UriInterface;
+    public function withPort(int|null $port, int $flags = 0): UriInterface;
+    public function withPath(string $path, int $flags = 0): UriInterface;
+    public function withQuery(string $query, int $flags = 0): UriInterface;
+    public function withFragment(string $fragment, int $flags = 0): UriInterface;
 
-    // PSR-7 string representation
+    // PSR-7 string representation & Stringable
 
     public function __toString(): string;
 
+    // JsonSerializable
+
+    public function jsonSerialize(): string;
+
+    // Additional query methods
+
+    public function getQueryItems(int $flags = 0): array;
+    public function getQueryItem(string $name, int $flags = 0): array|string|null;
+    public function withQueryItems(array $items, int $flags = 0): UriInterface;
+    public function withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface;
+
     // Additional methods
 
+    public function getComponents(int $flags = 0): array;
+    public function with(array $components, int $flags = 0): UriInterface;
     public function toString(int $flags = 0): string;
 }
 ```
@@ -116,6 +133,10 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
     // PSR-17 factory
 
     public function createUri(string $uri = ''): UriInterface;
+
+    // Additional methods
+
+    public function createUriFromInterface(UriInterface $uri): UriInterface;
 }
 ```
 
@@ -124,6 +145,7 @@ class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
 
 | Version | PHP | |
 | --- | --- | --- |
+| `2.0` | `^8.0` | Query helpers, with([]) and getComponents() methods, IDN encode/decode |
 | `1.3` | `^7.4\|^8.0` |  |
 | `1.2` | `^7.4\|^8.0` | IDNA modifier |
 | `1.1` | `^7.4\|^8.0` | Require port, Absolute path, Normalize path modifiers |

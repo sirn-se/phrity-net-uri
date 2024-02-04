@@ -29,7 +29,7 @@ class UriFactoryTest extends TestCase
         $this->assertInstanceOf(UriInterface::class, $uri);
     }
 
-    public function tesNontEmpty(): void
+    public function testNotEmpty(): void
     {
         $factory = new UriFactory();
         $this->assertInstanceOf(UriFactoryInterface::class, $factory);
@@ -38,7 +38,15 @@ class UriFactoryTest extends TestCase
         $this->assertInstanceOf(UriInterface::class, $uri);
     }
 
-    public function tesError(): void
+    public function testInterface(): void
+    {
+        $factory = new UriFactory();
+        $src = $factory->createUri('http://user:pass@domain.tld:123/path/page.html?q=query#fragment');
+        $uri = $factory->createUriFromInterface($src);
+        $this->assertInstanceOf(UriInterface::class, $uri);
+    }
+
+    public function testError(): void
     {
         $factory = new UriFactory();
         $this->assertInstanceOf(UriFactoryInterface::class, $factory);

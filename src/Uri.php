@@ -449,7 +449,12 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     public function withQueryItems(array $items, int $flags = 0): UriInterface
     {
         $clone = $this->clone($flags);
-        $clone->setQuery(http_build_query($this->merge($this->getQueryItems($flags), $items)), $flags);
+        $clone->setQuery(http_build_query(
+            $this->queryMerge($this->getQueryItems($flags), $items),
+            '',
+            null,
+            PHP_QUERY_RFC3986
+        ), $flags);
         return $clone;
     }
 
@@ -557,7 +562,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
             if (empty($auth) && $main['authority'] !== '') {
                 throw new InvalidArgumentException("Invalid 'authority'.");
             }
-            if ($this->isEmpty($auth['host']) && !$this->isEmpty($auth['user'])) {
+            if ($auth['host'] === '' && $auth['user'] !== '') {
                 throw new InvalidArgumentException("Invalid 'authority'.");
             }
             $this->setUser(isset($auth['user']) ? $auth['user'] : '');
@@ -589,14 +594,10 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         }, $source);
     }
 
-    private function formatComponent(mixed $value, string $before = '', string $after = ''): string
+    private function formatComponent(string|int|null $value, string $before = '', string $after = ''): string
     {
-        return $this->isEmpty($value) ? '' : "{$before}{$value}{$after}";
-    }
-
-    private function isEmpty(mixed $value): bool
-    {
-        return is_null($value) || $value === '';
+        $string = strval($value);
+        return $string === '' ? '' : "{$before}{$string}{$after}";
     }
 
     private function normalizePath(string $path): string
@@ -645,15 +646,17 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         return idn_to_utf8($value, IDNA_NONTRANSITIONAL_TO_UNICODE, INTL_IDNA_VARIANT_UTS46);
     }
 
-    private function merge(array $a, array $b): array
+    private function queryMerge(array $a, array $b): array
     {
         foreach ($b as $key => $value) {
             if (is_int($key)) {
                 $a[] = $value;
-            } elseif (array_key_exists($key, $a) && is_array($a[$key]) && is_array($b[$key])) {
-                $a[$key] = $this->merge($a[$key], $b[$key]);
+            } elseif (is_array($value)) {
+                $a[$key] = $this->queryMerge($a[$key] ?? [], $b[$key] ?? []);
+            } elseif (is_scalar($value)) {
+                $a[$key] = rawurldecode($b[$key]);
             } else {
-                $a[$key] = $b[$key];
+                unset($a[$key]);
             }
         }
         return $a;

@@ -234,6 +234,19 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals(parse_url($uri_str), $uri->getComponents());
     }
 
+    public function testQueryHelpers2(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?aaa=ö +-:;%C3%B6');
+        $this->assertEquals('aaa=%C3%B6%20+-:;%C3%B6', $uri->getQuery());
+        $this->assertEquals(['aaa' => 'ö  -:;ö'], $uri->getQueryItems());
+        $this->assertEquals('ö  -:;ö', $uri->getQueryItem('aaa'));
+
+        $uri = $uri->withQueryItem('aaa', 'å -+:;%C3%A5');
+        $this->assertEquals('aaa=%C3%A5%20-%2B%3A%3B%C3%A5', $uri->getQuery());
+        $this->assertEquals(['aaa' => 'å -+:;å'], $uri->getQueryItems());
+        $this->assertEquals('å -+:;å', $uri->getQueryItem('aaa'));
+    }
+
     public function testQueryHelpers(): void
     {
         $uri = new Uri('http://domain.tld:80/path?arr%5B0%5D=arr1&arr%5B1%5D=arr2#fragment');

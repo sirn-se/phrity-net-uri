@@ -1,23 +1,67 @@
-# URI class
+# Uri class
 
-## Constructor
+## Introduction
 
-Constructor takes an optional URI as string.
+The Uri class represents a [Uniform Resource Identifier](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier)
+used to identify an abstract or physical resource.
+The class is fully compatible with the [PSR-7 UriInterface](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface).
+
+## Class synopsis
 
 ```php
-use Phrity\Net\Uri;
+class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\UriInterface
+{
+    // Constructor
 
-$uri = new Uri();
-echo "{$uri} \n"; // -> ""
+    public function __construct(string $uri_string = '');
 
-$uri = new Uri('http://example.com');
-echo "{$uri} \n"; // -> "http://example.com"
+    // PSR-7 methods
 
-$uri = new Uri('https://user:pwd@domain.tld:1234/path/to/file.html?query=1#fragment');
-echo "{$uri} \n"; // -> "https://user:pwd@domain.tld:1234/path/to/file.html?query=1#fragment"
+    public function getScheme(int $flags = 0): string;
+    public function withScheme(string $scheme, int $flags = 0): Psr\Http\Message\UriInterface;
 
-$uri = new Uri('path/to/file.html');
-echo "{$uri} \n"; // -> "path/to/file.html "
+    public function getAuthority(int $flags = 0): string;
+
+    public function getUserInfo(int $flags = 0): string;
+    public function withUserInfo(string $user, string|null $password = null, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    public function getHost(int $flags = 0): string;
+    public function withHost(string $host, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    public function getPort(int $flags = 0): int|null;
+    public function withPort(int|null $port, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    public function getPath(int $flags = 0): string;
+    public function withPath(string $path, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    public function getQuery(int $flags = 0): string;
+    public function withQuery(string $query, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    public function getFragment(int $flags = 0): string;
+    public function withFragment(string $fragment, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    // Stringable and JsonSerializable methods
+
+    public function __toString(): string;
+    public function jsonSerialize(): string;
+
+    // Extension: Component methods
+
+    public function getComponents(int $flags = 0): array;
+    public function withComponents(array $components, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    // Extension: Query methods
+
+    public function getQueryItems(int $flags = 0): array;
+    public function getQueryItem(string $name, int $flags = 0): array|string|null;
+    public function withQueryItems(array $items, int $flags = 0): Psr\Http\Message\UriInterface;
+    public function withQueryItem(string $name, array|string|null $value, int $flags = 0): Psr\Http\Message\UriInterface;
+
+    // Extension: String method
+
+    public function toString(int $flags = 0): string;
+
+}
 ```
 
 ## PSR-7 component methods
@@ -26,7 +70,7 @@ These methods are compatible with the [PSR-7 UriInterface](https://www.php-fig.o
 
 ### Scheme
 
-This library is not restricted to certain schemas, but allow all schemas in correct format.
+This library is not restricted to certain schemes, but allow all schemes in correct format.
 
 ```php
 $uri = new Uri('my-own-scheme:');
@@ -34,9 +78,6 @@ echo "{$uri} \n"; // -> "my-own-scheme:"
 
 $uri = new Uri('this is not allowed as scheme:');
 echo "{$uri} \n"; // -> InvalidArgumentException
-
-$uri = new Uri('http://example.com');
-$uri->getScheme(); // -> "http"
 ```
 
 #### `getScheme(int $flags = 0): string`
@@ -53,7 +94,7 @@ $uri->getScheme(); // -> ""
 
 #### `withScheme(string $scheme, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified scheme set.
+Method return a new Uri instance with specified scheme set.
 
 ```php
 $uri = new Uri('http://example.com');
@@ -88,7 +129,7 @@ $uri->getHost(); // -> ""
 
 #### `withHost(string $host, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified host set.
+Method return a new Uri instance with specified host set.
 
 ```php
 $uri = new Uri('domain.tld');
@@ -99,19 +140,19 @@ echo "{$clone} \n"; // -> "//new-host.com/domain.tld"
 
 ### Port
 
-Port of connectiom. If default port is used, it is typically hidden.
+Port componenet of URI. If default port is used, it is typically hidden.
 
 ```php
 $uri = new Uri('http://domain.tld:80');
 echo "{$uri} \n"; // -> "http://domain.tld"
 
 $uri = new Uri('http://domain.tld:1234');
-echo "{$uri} \n"; // -> "127.0.0.1"
+echo "{$uri} \n"; // -> "http://domain.tld:1234"
 ```
 
 #### `getPort(int $flags = 0): int|null`
 
-Method return port, or null if using default port or port is not set.
+Method return port, or `null` if using default port or port is not set.
 
 ```php
 $uri = new Uri('http://domain.tld:80');
@@ -123,7 +164,7 @@ $uri->getPort(); // -> 1234
 
 #### `withPort(int|null $port, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified port set.
+Method return a new Uri instance with specified port set.
 
 ```php
 $uri = new Uri('http://domain.tld:80');
@@ -161,7 +202,7 @@ $uri->getPath(); // -> "path/to/file"
 
 #### `withPath(string $path, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified path set.
+Method return a new Uri instance with specified path set.
 
 ```php
 $uri = new Uri('http://domain.tld/path/to/file');
@@ -190,7 +231,7 @@ $uri->getQuery(); // -> "a=1&b=2"
 
 #### `withQuery(string $query, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified query set.
+Method return a new Uri instance with specified query set.
 
 ```php
 $uri = new Uri('http://domain.tld?a=1&b=2');
@@ -219,7 +260,7 @@ $uri->getFragment(); // -> "my+fragment"
 
 #### `withFragment(string $fragment, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified fragment set.
+Method return a new Uri instance with specified fragment set.
 
 ```php
 $uri = new Uri('http://domain.tld#my+fragment');
@@ -227,11 +268,6 @@ $clone = $uri->withFragment('new-fragment');
 $clone->getFragment(); // -> "new-fragment"
 echo "{$clone} \n"; // -> "http://domain.tld#new-fragment"
 ```
-
-
-
-
-
 
 ### UserInfo
 
@@ -256,7 +292,7 @@ echo "{$uri->getUserInfo()} \n"; // -> "user:pwd"
 
 #### `withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified scheme set.
+Method return a new Uri instance with specified user info set.
 
 ```php
 $uri = new Uri('http://example.com');
@@ -293,7 +329,7 @@ All `get`, `with` and the `toString()` methods accept option flags.
 
 ### Host options
 
-#### The `IDN_ENCODE` and `IDN_DECODE` options
+#### The `IDN_ENCODE` option
 
 Using `IDN_ENCODE` option will IDN-encode host using non-ASCII characters.
 Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
@@ -312,7 +348,9 @@ $clone->getHost(); // -> "xn--7ca5b9p776i"
 echo "{$clone} \n"; // -> "https://xn--7ca5b9p776i"
 ```
 
-Using `IDN_DECODE` option will IDN-decode host previously encoded to ASCII-only  characters.
+#### The `IDN_DECODE` option
+
+Using `IDN_DECODE` option will IDN-decode host previously encoded to ASCII-only characters.
 Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
 
 ```php
@@ -333,7 +371,11 @@ echo "{$clone} \n"; // -> "https://œüç∂"
 
 #### The `REQUIRE_PORT` option
 
-Using this option will require port when it noramlly would be hidden.
+By PSR-7 standard, if port is default for scheme it will be hidden.
+This options will attempt to always show the port.
+If not set, it will use default port if resolvable.
+
+Using this option will require port when it normally would be hidden.
 
 ```php
 $uri = new Uri('http://domain.tld:80');
@@ -351,7 +393,7 @@ $uri->toString(Uri::REQUIRE_PORT); // -> "http://domain.tld:80"
 
 #### The `ABSOLUTE_PATH` option
 
-This option will enforce absolute path.
+Will cause path to use absolute form, i.e. starting with `/`.
 
 ```php
 $uri = new Uri('path/to/file');
@@ -367,7 +409,7 @@ $clone->toString(); // -> "/some/other/path"
 
 #### The `NORMALIZE_PATH` option
 
-This option will normalize path.
+Will attempt to normalize path, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
 
 ```php
 $uri = new Uri('a/./path/../to//something');
@@ -380,7 +422,6 @@ $clone = $uri->withPath('path/./somewhere/else/..', Uri::NORMALIZE_PATH);
 $clone->getPath(); // -> "path/somewhere/"
 $clone->toString(); // -> "path/somewhere/"
 ```
-
 
 ## Extension methods
 
@@ -405,7 +446,7 @@ Unlike the regular `__toString()` method, this method accept option flags.
 ```php
 $uri = new Uri('https://ηßöø必Дあ.com/a/./path/../to//something');
 echo $uri->__toString(); // -> "https://ηßöø必дあ.com/a/./path/../to//something
-echo $uri->toString(Uri::IDN_ENCODE | Uri::REQUIRE_PORT | Uri::ABSOLUTE_PATH | Uri::NORMALIZE_PATH); // -> "https://xn--zca0cg32z7rau82strvd.com:443/a/to/something"
+echo $uri->toString(Uri::IDN_ENCODE | Uri::REQUIRE_PORT | Uri::NORMALIZE_PATH); // -> "https://xn--zca0cg32z7rau82strvd.com:443/a/to/something"
 ```
 
 #### `jsonSerialize(): string`
@@ -447,7 +488,7 @@ $uri->getQueryItem('c'); // -> null
 
 #### `withQueryItems(array $items, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified query items.
+Method return a new Uri instance with specified query items.
 The associative array of query items to add will be merged on existing items.
 Providing value `null` on an item will remove it.
 
@@ -460,7 +501,7 @@ echo $clone; // -> "http://example.com?a%5Ba1%5D=1&a%5Ba2%5D=2%2B&a%5Ba3%5D=3%2B
 
 #### `withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified query name/value.
+Method return a new Uri instance with specified query name/value.
 The added query item will be merged on existing items.
 Providing value `null` on an item will remove it.
 
@@ -483,13 +524,13 @@ $uri = new Uri('https://domain.tld:1234/path/to/file.html?query=1');
 $uri->getComponents(); // -> ["scheme" => "https", "host" => "domain.tld", "port" => 1234, "path" => "/path/to/file.html", "query" => "query=1"]
 ```
 
-#### `with(array $components, int $flags = 0): UriInterface`
+#### `withComponents(array $components, int $flags = 0): UriInterface`
 
-Method return a new Uri with specified components.
+Method return a new Uri instance with specified components.
 
 ```php
 $uri = new Uri('http://domain.tld');
-$clone = $uri->with(['scheme' => 'https', 'path' => 'path/to/file.html', 'query' => 'query=1']);
+$clone = $uri->withComponents['scheme' => 'https', 'path' => 'path/to/file.html', 'query' => 'query=1']);
 echo $clone; // -> "https://domain.tld/path/to/file.html?query=1"
 ```
 

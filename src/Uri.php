@@ -23,11 +23,9 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     public const REQUIRE_PORT = 1; // Always include port, explicit or default
     public const ABSOLUTE_PATH = 2; // Enforce absolute path
     public const NORMALIZE_PATH = 4; // Normalize path
-    public const IDN_ENCODE = 8; // IDN-encode host
-    public const IDN_DECODE = 16; // IDN-decode host
     public const IDNA = 8; // @deprecated, replaced by IDN_ENCODE
-    public const RFC1738_ENCODE = 32; // Enforce RFC1738 encoding
-    public const RFC3986_ENCODE = 64; // Enforce RFC3986 encoding
+    public const IDN_ENCODE = 16; // IDN-encode host
+    public const IDN_DECODE = 32; // IDN-decode host
 
     private const RE_MAIN = '!^(?P<schemec>(?P<scheme>[^:/?#]+):)?(?P<authorityc>//(?P<authority>[^/?#]*))?'
                           . '(?P<path>[^?#]*)(?P<queryc>\?(?P<query>[^#]*))?(?P<fragmentc>#(?P<fragment>.*))?$!';
@@ -145,6 +143,10 @@ class Uri implements JsonSerializable, Stringable, UriInterface
      */
     public function getHost(int $flags = 0): string
     {
+        if ($flags & self::IDNA) {
+            trigger_error("Flag IDNA is deprecated; use IDN_ENCODE instead", E_USER_DEPRECATED);
+            return $this->idnEncode($this->host);
+        }
         if ($flags & self::IDN_ENCODE) {
             return $this->idnEncode($this->host);
         }
@@ -153,6 +155,8 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         }
         return $this->host;
     }
+
+
 
     /**
      * Retrieve the port component of the URI.
@@ -358,7 +362,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     }
 
     /**
-     * Get compontsns as array; as parse_url() metohd
+     * Get compontsns as array; as parse_url() method
      * @param int $flags Optional modifier flags
      * @return array
      */
@@ -380,7 +384,7 @@ class Uri implements JsonSerializable, Stringable, UriInterface
      * Return an instance with the specified compontents set.
      * @return static A new instance with the specified components
      */
-    public function with(array $components, int $flags = 0): UriInterface
+    public function withComponents(array $components, int $flags = 0): UriInterface
     {
         $clone = $this->clone($flags);
         foreach ($components as $component => $value) {
@@ -484,6 +488,10 @@ class Uri implements JsonSerializable, Stringable, UriInterface
     protected function setHost(string $host, int $flags = 0): void
     {
         $this->authority = $this->authority || $host !== '';
+        if ($flags & self::IDNA) {
+            trigger_error("Flag IDNA is deprecated; use IDN_ENCODE instead", E_USER_DEPRECATED);
+            $host = $this->idnEncode($host);
+        }
         if ($flags & self::IDN_ENCODE) {
             $host = $this->idnEncode($host);
         }
@@ -501,27 +509,27 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         if ($flags & self::ABSOLUTE_PATH && substr($path, 0, 1) !== '/') {
             $path = "/{$path}";
         }
-        $this->path = $this->encode($path, $flags);
+        $this->path = $this->uriEncode($path, $flags);
     }
 
     protected function setQuery(string $query, int $flags = 0): void
     {
-        $this->query = $this->encode($query, $flags, '?');
+        $this->query = $this->uriEncode($query, $flags, '?');
     }
 
     protected function setFragment(string $fragment, int $flags = 0): void
     {
-        $this->fragment = $this->encode($fragment, $flags, '?');
+        $this->fragment = $this->uriEncode($fragment, $flags, '?');
     }
 
     protected function setUser(string $user, int $flags = 0): void
     {
-        $this->user = $this->encode($user, $flags, '?');
+        $this->user = $this->uriEncode($user, $flags, '?');
     }
 
     protected function setPassword(string|null $pass, int $flags = 0): void
     {
-        $this->pass = $pass === null ? null : $this->encode($pass, $flags, '?');
+        $this->pass = $pass === null ? null : $this->uriEncode($pass, $flags, '?');
     }
 
     protected function setUserInfo(string $user = '', string|null $pass = null, int $flags = 0): void
@@ -568,16 +576,15 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         return $clone;
     }
 
-    private function encode(string $source, int $flags = 0, string $keep = ''): string
+    private function uriEncode(string $source, int $flags = 0, string $keep = ''): string
     {
-        $encode = $flags & self::RFC1738_ENCODE ? 'urlencode' : 'rawurlencode';
         $exclude = "[^%\/:=&!\$'()*+,;@{$keep}]+";
         $exp = "/(%{$exclude})|({$exclude})/";
-        return preg_replace_callback($exp, function ($matches) use ($encode) {
+        return preg_replace_callback($exp, function ($matches) {
             if ($e = preg_match('/^(%[0-9a-fA-F]{2})/', $matches[0], $m)) {
-                return substr($matches[0], 0, 3) . $encode(substr($matches[0], 3));
+                return substr($matches[0], 0, 3) . rawurlencode(substr($matches[0], 3));
             } else {
-                return $encode($matches[0]);
+                return rawurlencode($matches[0]);
             }
         }, $source);
     }

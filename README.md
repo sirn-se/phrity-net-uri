@@ -16,34 +16,68 @@ Install with [Composer](https://getcomposer.org/);
 composer require phrity/net-uri
 ```
 
+## Uri class methods
+
+Implemts [PSR-7 UriInterface](https://www.php-fig.org/psr/psr-7/#35-psrhttpmessageuriinterface)
+and provides some extra metods and options. [More info here](docs/Uri.md).
+
+```php
+use Phrity\Net\Uri;
+$uri = new Uri('http://example.com/path/to/file.html?query1=1#fragment');
+
+// PSR-7 getters
+$uri->getScheme();
+$uri->getHost();
+$uri->getPort();
+$uri->getPath();
+$uri->getQuery();
+$uri->getFragment();
+$uri->getAuthority();
+$uri->getUserInfo();
+
+// PSR-7 setters
+$uri->withScheme('https');
+$uri->withHost('example2.com');
+$uri->withPort(8080);
+$uri->withPath('/path/to/another/file.html');
+$uri->withQuery('query2=2');
+$uri->withFragment('another-fragment');
+$uri->withUserInfo('username', 'password');
+
+// Additional methods
+$uri->toString();
+$uri->__toString();
+$uri->jsonSerialize();
+$uri->getQueryItems();
+$uri->getQueryItem('query1');
+$uri->withQueryItems(['query1' => '1', 'query2' => '2']);
+$uri->withQueryItem('query1', '1');
+$uri->getComponents();
+$uri->withComponents(['scheme' => 'https', 'host' => 'example2.com']);
+```
+
+## UriFactory class methods
+
+Implemts [PSR-17 UriFactoryInterface](https://www.php-fig.org/psr/psr-17/#26-urifactoryinterface)
+and provides some extra metods and options. [More info here](docs/UriFactory.md).
+
+```php
+use Phrity\Net\UriFactory;
+$factory = new UriFactory();
+$factory->createUri('http://example.com/path/to/file.html');
+$factory->createUriFromInterface(new GuzzleHttp\Psr7\Uri('http://example.com/path/to/file.html'));
+```
+
 ## Modifiers
 
 Out of the box, it will behave as specified by PSR standards.
 To change behaviour, there are some modifiers available.
 These can be added as last argument in all `get` and `with` methods, plus the `toString` method.
 
-`REQUIRE_PORT`
-
-By PSR standard, if port is default for scheme it will be hidden.
-This options will attempt to always show the port.
-If set, it will be shown even if default. If not set, it will use default port if resolvable.
-
-`ABSOLUTE_PATH`
-
-Will cause paths to use absolute form, i.e. starting with `/`.
-
-`NORMALIZE_PATH`
-
-Will attempt to normalize paths, e.g. `./a/./path/../to//something` will transform to `a/to/something`.
-
-`IDN_ENCODE` + `IDN_ENCODE`
-
-Will IDN-encode host using non-ASCII characters. Only available with [Intl extension](https://www.php.net/manual/en/intl.installation.php).
-
-`RFC1738`
-
-Will use RFC 1738 encoding (spaces encoded as `+`). Encoding by RFC 3986 (spaces encoded as `%20`) is default.
-
+* `REQUIRE_PORT` - Attempt to show port, even if default
+* `ABSOLUTE_PATH` - Will cause path to use absolute form, i.e. starting with `/`
+* `NORMALIZE_PATH` - Will attempt to normalize path
+* `IDN_ENCODE` / `IDN_DECODE` - Encode or decode IDN-format for non-ASCII host
 
 ### Examples
 
@@ -62,84 +96,6 @@ $clone->getPath(); // => '/path/somewhere'
 $uri = new Uri('https://ηßöø必Дあ.com');
 $uri->getHost(Uri::IDN_ENCODE); // => 'xn--zca0cg32z7rau82strvd.com'
 ```
-
-
-## Classes
-
-There are two available classes, `Uri` and `UriFactory`.
-
-### The Uri class
-
-```php
-class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\UriInterface
-{
-    // Constructor
-
-    public function __construct(string $uri_string = '');
-
-    // PSR-7 getters
-
-    public function getScheme(int $flags = 0): string;
-    public function getAuthority(int $flags = 0): string;
-    public function getUserInfo(int $flags = 0): string;
-    public function getHost(int $flags = 0): string;
-    public function getPort(int $flags = 0): int|null;
-    public function getPath(int $flags = 0): string;
-    public function getQuery(int $flags = 0): string;
-    public function getFragment(int $flags = 0): string;
-
-    // PSR-7 setters
-
-    public function withScheme(string $scheme, int $flags = 0): UriInterface;
-    public function withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface;
-    public function withHost(string $host, int $flags = 0): UriInterface;
-    public function withPort(int|null $port, int $flags = 0): UriInterface;
-    public function withPath(string $path, int $flags = 0): UriInterface;
-    public function withQuery(string $query, int $flags = 0): UriInterface;
-    public function withFragment(string $fragment, int $flags = 0): UriInterface;
-
-    // PSR-7 string representation & Stringable
-
-    public function __toString(): string;
-
-    // JsonSerializable
-
-    public function jsonSerialize(): string;
-
-    // Additional query methods
-
-    public function getQueryItems(int $flags = 0): array;
-    public function getQueryItem(string $name, int $flags = 0): array|string|null;
-    public function withQueryItems(array $items, int $flags = 0): UriInterface;
-    public function withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface;
-
-    // Additional methods
-
-    public function getComponents(int $flags = 0): array;
-    public function with(array $components, int $flags = 0): UriInterface;
-    public function toString(int $flags = 0): string;
-}
-```
-
-### The UriFactory class
-
-```php
-class Phrity\Net\UriFactory implements Psr\Http\Message\UriFactoryInterface
-{
-    // Constructor
-
-    public function __construct();
-
-    // PSR-17 factory
-
-    public function createUri(string $uri = ''): UriInterface;
-
-    // Additional methods
-
-    public function createUriFromInterface(UriInterface $uri): UriInterface;
-}
-```
-
 
 ## Versions
 

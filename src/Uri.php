@@ -156,8 +156,6 @@ class Uri implements JsonSerializable, Stringable, UriInterface
         return $this->host;
     }
 
-
-
     /**
      * Retrieve the port component of the URI.
      * @param int $flags Optional modifier flags

@@ -11,6 +11,7 @@ namespace Phrity\Net;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Phrity\Util\ErrorHandler;
 use Psr\Http\Message\UriInterface;
 use JsonSerializable;
 use Stringable;
@@ -234,7 +235,7 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals(parse_url($uri_str), $uri->getComponents());
     }
 
-    public function testQueryHelpers2(): void
+    public function testQueryHelperNonAscii(): void
     {
         $uri = new Uri('http://domain.tld:80/path?aaa=ö +-:;%C3%B6');
         $this->assertEquals('aaa=%C3%B6%20+-:;%C3%B6', $uri->getQuery());
@@ -247,7 +248,7 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals('å -+:;å', $uri->getQueryItem('aaa'));
     }
 
-    public function testQueryHelpers(): void
+    public function testQueryHelperArrays(): void
     {
         $uri = new Uri('http://domain.tld:80/path?arr%5B0%5D=arr1&arr%5B1%5D=arr2#fragment');
         $this->assertEquals([
@@ -277,5 +278,21 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals([
             'arr' => ['arr1', 'arr2', 'arr3'],
         ], $uri->getQueryItems());
+    }
+
+    public function testDeprecation(): void
+    {
+        $handler = new ErrorHandler();
+        $uri = new Uri('https://xn--zca0cg32z7rau82strvd.com');
+        $handler->with(function () use ($uri) {
+            $uri->getHost(Uri::IDNA);
+        }, function ($error) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $error->getMessage());
+        });
+        $handler->with(function () use ($uri) {
+            $uri->withHost('xn--zca0cg32z7rau82strvd.com', Uri::IDNA);
+        }, function ($error) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $error->getMessage());
+        });
     }
 }

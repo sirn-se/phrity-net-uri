@@ -284,15 +284,15 @@ class UriExtensionsTest extends TestCase
     {
         $handler = new ErrorHandler();
         $uri = new Uri('https://xn--zca0cg32z7rau82strvd.com');
-        $handler->with(function () use ($uri) {
+        $handler->withAll(function () use ($uri) {
             $uri->getHost(Uri::IDNA);
-        }, function ($error) {
-            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $error->getMessage());
+        }, function ($errors) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $errors[0]->getMessage());
         });
-        $handler->with(function () use ($uri) {
+        $handler->withAll(function () use ($uri) {
             $uri->withHost('xn--zca0cg32z7rau82strvd.com', Uri::IDNA);
-        }, function ($error) {
-            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $error->getMessage());
+        }, function ($errors) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $errors[0]->getMessage());
         });
     }
 }

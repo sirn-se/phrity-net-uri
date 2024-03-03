@@ -11,6 +11,7 @@ namespace Phrity\Net;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Phrity\Util\ErrorHandler;
 use Psr\Http\Message\UriInterface;
 use JsonSerializable;
 use Stringable;
@@ -175,10 +176,10 @@ class UriExtensionsTest extends TestCase
         $this->assertSame('', $clone->getHost());
     }
 
-    public function testWithMethod(): void
+    public function testwithComponentsMethod(): void
     {
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
-        $clone = $uri->with([
+        $clone = $uri->withComponents([
             'scheme' => 'https',
             'userInfo' => ['user', 'password'],
             'host' => 'new.domain.tld',
@@ -194,12 +195,12 @@ class UriExtensionsTest extends TestCase
         );
     }
 
-    public function testWithMethodInvalidComponent(): void
+    public function testwithComponentsMethodInvalidComponent(): void
     {
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Invalid URI component: 'invalid'");
-        $clone = $uri->with([
+        $clone = $uri->withComponents([
             'invalid' => 'invalid',
         ]);
     }
@@ -234,7 +235,20 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals(parse_url($uri_str), $uri->getComponents());
     }
 
-    public function testQueryHelpers(): void
+    public function testQueryHelperNonAscii(): void
+    {
+        $uri = new Uri('http://domain.tld:80/path?aaa=ö +-:;%C3%B6');
+        $this->assertEquals('aaa=%C3%B6%20+-:;%C3%B6', $uri->getQuery());
+        $this->assertEquals(['aaa' => 'ö  -:;ö'], $uri->getQueryItems());
+        $this->assertEquals('ö  -:;ö', $uri->getQueryItem('aaa'));
+
+        $uri = $uri->withQueryItem('aaa', 'å -+:;%C3%A5');
+        $this->assertEquals('aaa=%C3%A5%20-%2B%3A%3B%C3%A5', $uri->getQuery());
+        $this->assertEquals(['aaa' => 'å -+:;å'], $uri->getQueryItems());
+        $this->assertEquals('å -+:;å', $uri->getQueryItem('aaa'));
+    }
+
+    public function testQueryHelperArrays(): void
     {
         $uri = new Uri('http://domain.tld:80/path?arr%5B0%5D=arr1&arr%5B1%5D=arr2#fragment');
         $this->assertEquals([
@@ -264,5 +278,21 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals([
             'arr' => ['arr1', 'arr2', 'arr3'],
         ], $uri->getQueryItems());
+    }
+
+    public function testDeprecation(): void
+    {
+        $handler = new ErrorHandler();
+        $uri = new Uri('https://xn--zca0cg32z7rau82strvd.com');
+        $handler->withAll(function () use ($uri) {
+            $uri->getHost(Uri::IDNA);
+        }, function ($errors) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $errors[0]->getMessage());
+        });
+        $handler->withAll(function () use ($uri) {
+            $uri->withHost('xn--zca0cg32z7rau82strvd.com', Uri::IDNA);
+        }, function ($errors) {
+            $this->assertEquals('Flag IDNA is deprecated; use IDN_ENCODE instead', $errors[0]->getMessage());
+        });
     }
 }

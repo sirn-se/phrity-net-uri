@@ -293,7 +293,7 @@ class UriExtensionsTest extends TestCase
         $this->assertTrue($uri->equals($compareWith));
     }
 
-    /** @return array<array<UriInterface|string, bool>> */
+    /** @return array<array<UriInterface|string>> */
     public static function provideValidEqual(): array
     {
         return [
@@ -311,7 +311,7 @@ class UriExtensionsTest extends TestCase
         $this->assertFalse($uri->equals($compareWith));
     }
 
-    /** @return array<array<UriInterface|string, bool>> */
+    /** @return array<array<UriInterface|string>> */
     public static function provideValidNotEqual(): array
     {
         return [
@@ -335,7 +335,7 @@ class UriExtensionsTest extends TestCase
         $this->assertFalse($uri->equals($compareWith));
     }
 
-    /** @return array<array<UriInterface|string, bool>> */
+    /** @return array<array<mixed>> */
     public static function provideInvalidEqual(): array
     {
         return [

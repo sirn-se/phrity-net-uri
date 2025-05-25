@@ -18,7 +18,7 @@ This methods are compatible with the [PSR-17 UriFactoryInterface](https://www.ph
 
 #### `createUri(string $uri = ''): UriInterface`
 
-Method return a new Uri instance, empty or bu parsing provided URI string.
+Method return a new Uri instance, empty or by parsing provided URI string.
 
 ```php
 $factory = new UriFactory();

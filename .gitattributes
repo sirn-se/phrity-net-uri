@@ -1,7 +1,10 @@
 .gitattributes         export-ignore
-.github/               export-ignore
+.github                export-ignore
 .gitignore             export-ignore
+docs                   export-ignore
 Makefile               export-ignore
-phpunit.xml.dist       export-ignore
+phpcs.xml              export-ignore
+phpstan.neon           export-ignore
+phpunit.xml            export-ignore
 README.md              export-ignore
-tests/                 export-ignore
+tests                  export-ignore

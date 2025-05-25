@@ -9,7 +9,7 @@ The class is fully compatible with the [PSR-7 UriInterface](https://www.php-fig.
 ## Class synopsis
 
 ```php
-class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\UriInterface
+class Phrity\Net\Uri implements Phrity\Comparison\Equable, JsonSerializable, Stringable, Psr\Http\Message\UriInterface
 {
     // Constructor
 
@@ -40,10 +40,17 @@ class Phrity\Net\Uri implements JsonSerializable, Stringable, Psr\Http\Message\U
     public function getFragment(int $flags = 0): string;
     public function withFragment(string $fragment, int $flags = 0): Psr\Http\Message\UriInterface;
 
-    // Stringable and JsonSerializable methods
+    // Equable methods
+
+    public function equals(mixed $compareWith): bool;
+
+    // JsonSerializable methods
+
+    public function jsonSerialize(): string;
+
+    // Stringable methods
 
     public function __toString(): string;
-    public function jsonSerialize(): string;
 
     // Extension: Component methods
 
@@ -92,7 +99,7 @@ $uri = new Uri();
 $uri->getScheme(); // -> ""
 ```
 
-#### `withScheme(string $scheme, int $flags = 0): UriInterface`
+#### `withScheme(string $scheme, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified scheme set.
 
@@ -127,7 +134,7 @@ $uri = new Uri();
 $uri->getHost(); // -> ""
 ```
 
-#### `withHost(string $host, int $flags = 0): UriInterface`
+#### `withHost(string $host, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified host set.
 
@@ -162,7 +169,7 @@ $uri = new Uri('http://domain.tld:1234');
 $uri->getPort(); // -> 1234
 ```
 
-#### `withPort(int|null $port, int $flags = 0): UriInterface`
+#### `withPort(int|null $port, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified port set.
 
@@ -200,7 +207,7 @@ $uri = new Uri('path/to/file');
 $uri->getPath(); // -> "path/to/file"
 ```
 
-#### `withPath(string $path, int $flags = 0): UriInterface`
+#### `withPath(string $path, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified path set.
 
@@ -229,7 +236,7 @@ $uri = new Uri('http://domain.tld?a=1&b=2');
 $uri->getQuery(); // -> "a=1&b=2"
 ```
 
-#### `withQuery(string $query, int $flags = 0): UriInterface`
+#### `withQuery(string $query, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified query set.
 
@@ -258,7 +265,7 @@ $uri = new Uri('http://domain.tld#my+fragment');
 $uri->getFragment(); // -> "my+fragment"
 ```
 
-#### `withFragment(string $fragment, int $flags = 0): UriInterface`
+#### `withFragment(string $fragment, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified fragment set.
 
@@ -290,7 +297,7 @@ $uri = new Uri('https://user:pwd@domain.tld');
 echo "{$uri->getUserInfo()} \n"; // -> "user:pwd"
 ```
 
-#### `withUserInfo(string $user, string|null $password = null, int $flags = 0): UriInterface`
+#### `withUserInfo(string $user, string|null $password = null, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified user info set.
 
@@ -489,6 +496,23 @@ echo $uri->jsonSerialize(); // -> "http://example.com"
 echo json_encode($uri); // -> '"http:\/\/example.com"'
 ```
 
+### Comparison methods
+
+#### `equals(mixed $compareWith): bool`
+
+if `$compareWith` is a Psr\Http\Message\UriInterface or URI string, return true if equal.
+It will convert URI:s to comparable representation.
+
+Will throw exception if `$compareWith` is not comparable.
+
+```php
+$uri = new Uri('https://ηßöø必Дあ.com/a/./path/../to//something');
+$uri->equals('https://ηßöø必Дあ.com/a/./path/../to//something'); // -> true
+$uri->equals('https:/n--zca0cg32z7rau82strvd.com:443/a/to/something'); // -> true
+$uri->equals(new Uri('https://ηßöø必Дあ.com/a/./path/../to//something')); // -> true
+$uri->equals('http://example.com/'); // -> false
+$uri->equals(null); // -> Exception
+```
 
 ### Query helper methods
 
@@ -516,7 +540,7 @@ $uri->getQueryItem('b'); // -> "3"
 $uri->getQueryItem('c'); // -> null
 ```
 
-#### `withQueryItems(array $items, int $flags = 0): UriInterface`
+#### `withQueryItems(array $items, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified query items.
 The associative array of query items to add will be merged on existing items.
@@ -529,7 +553,7 @@ $clone->getQueryItems(); // -> ["a" => ["a1" => "1", "a2" => "2+", "a3" => "3+"]
 echo $clone; // -> "http://example.com?a%5Ba1%5D=1&a%5Ba2%5D=2%2B&a%5Ba3%5D=3%2B&b=3%2B"
 ```
 
-#### `withQueryItem(string $name, array|string|null $value, int $flags = 0): UriInterface`
+#### `withQueryItem(string $name, array|string|null $value, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified query name/value.
 The added query item will be merged on existing items.
@@ -554,7 +578,7 @@ $uri = new Uri('https://domain.tld:1234/path/to/file.html?query=1');
 $uri->getComponents(); // -> ["scheme" => "https", "host" => "domain.tld", "port" => 1234, "path" => "/path/to/file.html", "query" => "query=1"]
 ```
 
-#### `withComponents(array $components, int $flags = 0): UriInterface`
+#### `withComponents(array $components, int $flags = 0): Psr\Http\Message\UriInterface`
 
 Method return a new Uri instance with specified components.
 

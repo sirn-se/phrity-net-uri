@@ -11,6 +11,8 @@ namespace Phrity\Net;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Phrity\Comparison\IncomparableException;
 use Phrity\Util\ErrorHandler;
 use Psr\Http\Message\UriInterface;
 use JsonSerializable;
@@ -176,7 +178,7 @@ class UriExtensionsTest extends TestCase
         $this->assertSame('', $clone->getHost());
     }
 
-    public function testwithComponentsMethod(): void
+    public function testWithComponentsMethod(): void
     {
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
         $clone = $uri->withComponents([
@@ -195,7 +197,7 @@ class UriExtensionsTest extends TestCase
         );
     }
 
-    public function testwithComponentsMethodInvalidComponent(): void
+    public function testWithComponentsMethodInvalidComponent(): void
     {
         $uri = new Uri('http://domain.tld:80/path?query=1#fragment');
         $this->expectException(InvalidArgumentException::class);
@@ -244,7 +246,7 @@ class UriExtensionsTest extends TestCase
 
         $uri = $uri->withQueryItem('aaa', 'å -+:;%C3%A5');
         $this->assertEquals('aaa=%C3%A5%20-+:;%C3%A5', $uri->getQuery());
-        // @todo: parse_str() function decode as RFC 1738 rather than 3986, need to buiuld own parser
+        // @todo: parse_str() function decode as RFC 1738 rather than 3986, need to build own parser
         $this->assertEquals(['aaa' => 'å - :;å'], $uri->getQueryItems());
         // $this->assertEquals(['aaa' => 'å -+:;å'], $uri->getQueryItems());
         $this->assertEquals('å - :;å', $uri->getQueryItem('aaa'));
@@ -281,6 +283,66 @@ class UriExtensionsTest extends TestCase
         $this->assertEquals([
             'arr' => ['arr1', 'arr2', 'arr3'],
         ], $uri->getQueryItems());
+    }
+
+
+    #[DataProvider('provideValidEqual')]
+    public function testEquals(UriInterface|string $compareWith): void
+    {
+        $uri = new Uri('https://ηßöø必дあ.com/åäö/b?a=åäö#åäö');
+        $this->assertTrue($uri->equals($compareWith));
+    }
+
+    /** @return array<array<UriInterface|string>> */
+    public static function provideValidEqual(): array
+    {
+        return [
+            ['https://xn--zca0cg32z7rau82strvd.com/åäö//a/../b?a=åäö#åäö'],
+            ['https://ηßöø必дあ.com/åäö/b?a=åäö#åäö'],
+            ['https://ηßöø必дあ.com:443/%C3%A5%C3%A4%C3%B6/b?a=%C3%A5%C3%A4%C3%B6#%C3%A5%C3%A4%C3%B6'],
+            [new Uri('https://ηßöø必дあ.com/åäö/b?a=åäö#åäö')],
+        ];
+    }
+
+    #[DataProvider('provideValidNotEqual')]
+    public function testNotEquals(UriInterface|string $compareWith): void
+    {
+        $uri = new Uri('https://ηßöø必дあ.com/åäö/b?a=åäö#åäö');
+        $this->assertFalse($uri->equals($compareWith));
+    }
+
+    /** @return array<array<UriInterface|string>> */
+    public static function provideValidNotEqual(): array
+    {
+        return [
+            ['http://ηßöø必дあ.com/åäö/b?a=åäö#åäö'],
+            ['https://notthesame.com/åäö/b?a=åäö#åäö'],
+            ['https://ηßöø必дあ.com/abc/b?a=åäö#åäö'],
+            ['https://ηßöø必дあ.com/åäö/b?a=abc#åäö'],
+            ['https://ηßöø必дあ.com/åäö/b?a=åäö#abc'],
+            ['https://ηßöø必дあ.com:80/åäö/b?a=åäö#åäö'],
+            ['/åäö/b?a=åäö#åäö'],
+            [new Uri('http://ηßöø必дあ.com/åäö/b?a=åäö#åäö')],
+        ];
+    }
+
+    #[DataProvider('provideInvalidEqual')]
+    public function testInvalidEquals(mixed $compareWith, string $type): void
+    {
+        $uri = new Uri('https://ηßöø必дあ.com/åäö/b?a=åäö#åäö');
+        $this->expectException(IncomparableException::class);
+        $this->expectExceptionMessage("Can not compare with type '{$type}'");
+        $this->assertFalse($uri->equals($compareWith));
+    }
+
+    /** @return array<array<mixed>> */
+    public static function provideInvalidEqual(): array
+    {
+        return [
+            [1234, 'int'],
+            [null, 'null'],
+            [[], 'array'],
+        ];
     }
 
     public function testDeprecation(): void

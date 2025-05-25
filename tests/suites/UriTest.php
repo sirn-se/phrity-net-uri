@@ -75,16 +75,14 @@ class UriTest extends TestCase
 
     // ---------- URI string tests --------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidUris
-     */
     #[DataProvider('provideValidUris')]
-    public function testValidUri($uri_string): void
+    public function testValidUri(string $uriString): void
     {
-        $uri = new Uri($uri_string);
-        $this->assertSame($uri_string, (string) $uri);
+        $uri = new Uri($uriString);
+        $this->assertSame($uriString, (string)$uri);
     }
 
+    /** @return array<array<string>> */
     public static function provideValidUris(): array
     {
         return [
@@ -121,16 +119,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidUris
-     */
     #[DataProvider('provideInvalidUris')]
-    public function testInvalidUri($uri_string): void
+    public function testInvalidUri(string $uriString): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $uri = new Uri($uri_string);
+        $uri = new Uri($uriString);
     }
 
+    /** @return array<array<string>> */
     public static function provideInvalidUris(): array
     {
         return [
@@ -144,16 +140,14 @@ class UriTest extends TestCase
 
     // ---------- Port tests --------------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidPorts
-     */
     #[DataProvider('provideValidPorts')]
-    public function testValidPort($port, $expected): void
+    public function testValidPort(int|null $port, int|null $expected): void
     {
         $uri = (new Uri())->withPort($port);
         $this->assertSame($expected, $uri->getPort());
     }
 
+    /** @return array<array<int|null>> */
     public static function provideValidPorts(): array
     {
         return [
@@ -163,16 +157,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidPorts
-     */
     #[DataProvider('provideInvalidPorts')]
-    public function testInvalidPort($port): void
+    public function testInvalidPort(int $port): void
     {
         $this->expectException(InvalidArgumentException::class);
         $uri = (new Uri())->withPort($port);
     }
 
+    /** @return array<array<int>> */
     public static function provideInvalidPorts(): array
     {
         return [
@@ -181,16 +173,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidPortTypes
-     */
     #[DataProvider('provideInvalidPortTypes')]
-    public function testInvalidPortType($port): void
+    public function testInvalidPortType(mixed $port): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withPort($port);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidPortTypes(): array
     {
         return [
@@ -199,22 +189,16 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideDefaultPorts
-     */
     #[DataProvider('provideDefaultPorts')]
-    public function testDefaultPort($scheme, $port): void
+    public function testDefaultPort(string $scheme, int $port): void
     {
         $uri = new Uri("{$scheme}://domain.tld:{$port}");
         $this->assertSame(null, $uri->getPort());
         $this->assertSame("{$scheme}://domain.tld", (string)$uri);
     }
 
-    /**
-     * @dataProvider provideDefaultPorts
-     */
     #[DataProvider('provideDefaultPorts')]
-    public function testNotDefaultPort($scheme, $port): void
+    public function testNotDefaultPort(string $scheme, int $port): void
     {
         $port += 100;
         $uri = new Uri("{$scheme}://domain.tld:{$port}");
@@ -222,6 +206,7 @@ class UriTest extends TestCase
         $this->assertSame("{$scheme}://domain.tld:{$port}", (string)$uri);
     }
 
+    /** @return array<array<string|int>> */
     public static function provideDefaultPorts(): array
     {
         return [
@@ -287,16 +272,14 @@ class UriTest extends TestCase
 
     // ---------- Scheme tests ------------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidSchemes
-     */
     #[DataProvider('provideValidSchemes')]
-    public function testValidScheme($scheme, $expected): void
+    public function testValidScheme(string $scheme, string $expected): void
     {
         $uri = (new Uri())->withScheme($scheme);
         $this->assertSame($expected, $uri->getScheme());
     }
 
+    /** @return array<array<string>> */
     public static function provideValidSchemes(): array
     {
         return [
@@ -307,16 +290,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidSchemes
-     */
     #[DataProvider('provideInvalidSchemes')]
-    public function testInvalidScheme($scheme): void
+    public function testInvalidScheme(string $scheme): void
     {
         $this->expectException(InvalidArgumentException::class);
         $uri = (new Uri())->withScheme($scheme);
     }
 
+    /** @return array<array<string>> */
     public static function provideInvalidSchemes(): array
     {
         return [
@@ -326,16 +307,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidSchemeTypes
-     */
     #[DataProvider('provideInvalidSchemeTypes')]
-    public function testInvalidSchemeType($scheme): void
+    public function testInvalidSchemeType(mixed $scheme): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withScheme($scheme);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidSchemeTypes(): array
     {
         return [
@@ -347,16 +326,14 @@ class UriTest extends TestCase
 
     // ---------- Host tests --------------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidHosts
-     */
     #[DataProvider('provideValidHosts')]
-    public function testValidHost($host, $expected): void
+    public function testValidHost(string $host, string $expected): void
     {
         $uri = (new Uri())->withHost($host);
         $this->assertSame($expected, $uri->getHost());
     }
 
+    /** @return array<array<string>> */
     public static function provideValidHosts(): array
     {
         return [
@@ -368,16 +345,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidHostTypes
-     */
     #[DataProvider('provideInvalidHostTypes')]
-    public function testInvalidHosTypet($host): void
+    public function testInvalidHosTypet(mixed $host): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withHost($host);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidHostTypes(): array
     {
         return [
@@ -389,16 +364,14 @@ class UriTest extends TestCase
 
     // ---------- Path tests --------------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidPaths
-     */
     #[DataProvider('provideValidPaths')]
-    public function testValidPath($path, $expected): void
+    public function testValidPath(string $path, string $expected): void
     {
         $uri = (new Uri())->withPath($path);
         $this->assertSame($expected, $uri->getPath());
     }
 
+    /** @return array<array<string>> */
     public static function provideValidPaths(): array
     {
         return [
@@ -416,16 +389,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidPathTypes
-     */
     #[DataProvider('provideInvalidPathTypes')]
-    public function testInvalidPathsType($path): void
+    public function testInvalidPathsType(mixed $path): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withPath($path);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidPathTypes(): array
     {
         return [
@@ -445,16 +416,14 @@ class UriTest extends TestCase
 
     // ---------- Query tests -------------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidQueries
-     */
     #[DataProvider('provideValidQueries')]
-    public function testValidQuery($query, $expected): void
+    public function testValidQuery(string $query, string $expected): void
     {
         $uri = (new Uri())->withQuery($query);
         $this->assertSame($expected, $uri->getQuery());
     }
 
+    /** @return array<array<string>> */
     public static function provideValidQueries(): array
     {
         return [
@@ -470,16 +439,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidQueryTypes
-     */
     #[DataProvider('provideInvalidQueryTypes')]
-    public function testInvalidQueryType($query): void
+    public function testInvalidQueryType(mixed $query): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withQuery($query);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidQueryTypes(): array
     {
         return [
@@ -491,16 +458,14 @@ class UriTest extends TestCase
 
     // ---------- Fragment tests ----------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidFragments
-     */
     #[DataProvider('provideValidFragments')]
-    public function testValidFragment($fragment, $expected): void
+    public function testValidFragment(string $fragment, string $expected): void
     {
         $uri = (new Uri())->withFragment($fragment);
         $this->assertSame($expected, $uri->getFragment());
     }
 
+    /** @return array<array<string>> */
     public static function provideValidFragments(): array
     {
         return [
@@ -515,16 +480,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidFragmentTypes
-     */
     #[DataProvider('provideInvalidFragmentTypes')]
-    public function testInvalidFragmentType($fragment): void
+    public function testInvalidFragmentType(mixed $fragment): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri())->withFragment($fragment);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidFragmentTypes(): array
     {
         return [
@@ -536,11 +499,8 @@ class UriTest extends TestCase
 
     // ---------- Authority tests ---------------------------------------------------------------------------------- //
 
-    /**
-     * @dataProvider provideValidUserInfos
-     */
     #[DataProvider('provideValidUserInfos')]
-    public function testValidUserInfo($user, $pass, $expected, $include): void
+    public function testValidUserInfo(string $user, string $pass, string $expected, string $include): void
     {
         $uri = (new Uri('http://domain.tld'))->withUserInfo($user, $pass);
         $this->assertSame($expected, $uri->getUserInfo());
@@ -548,6 +508,7 @@ class UriTest extends TestCase
         $this->assertSame("http://{$uri->getAuthority()}", (string)$uri);
     }
 
+    /** @return array<array<string>> */
     public static function provideValidUserInfos(): array
     {
         return [
@@ -561,11 +522,8 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideValidUserInfosDecoded
-     */
     #[DataProvider('provideValidUserInfosDecoded')]
-    public function testValidUserInfoDecoded($user, $pass, $expected, $include): void
+    public function testValidUserInfoDecoded(string $user, string $pass, string $expected, string $include): void
     {
         $uri = (new Uri('http://domain.tld'))->withUserInfo($user, $pass);
         $this->assertSame($expected, $uri->getUserInfo(Uri::URI_DECODE));
@@ -573,6 +531,7 @@ class UriTest extends TestCase
         $this->assertSame("http://{$uri->getAuthority()}", (string)$uri);
     }
 
+    /** @return array<array<string>> */
     public static function provideValidUserInfosDecoded(): array
     {
         return [
@@ -586,11 +545,8 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideValidUserInfosEncoded
-     */
     #[DataProvider('provideValidUserInfosEncoded')]
-    public function testValidUserInfoEncoded($user, $pass, $expected, $include): void
+    public function testValidUserInfoEncoded(string $user, string $pass, string $expected, string $include): void
     {
         $uri = (new Uri('http://domain.tld'))->withUserInfo($user, $pass);
         $this->assertSame($expected, $uri->getUserInfo(Uri::URI_ENCODE));
@@ -598,6 +554,7 @@ class UriTest extends TestCase
         $this->assertSame("http://{$uri->getAuthority()}", (string)$uri);
     }
 
+    /** @return array<array<string>> */
     public static function provideValidUserInfosEncoded(): array
     {
         return [
@@ -611,16 +568,14 @@ class UriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideInvalidUserInfoTypes
-     */
     #[DataProvider('provideInvalidUserInfoTypes')]
-    public function testInvalidUserInfoType($user, $pass, $expected, $include): void
+    public function testInvalidUserInfoType(mixed $user, mixed $pass, mixed $expected, mixed $include): void
     {
         $this->expectException(TypeError::class);
         $uri = (new Uri('http://domain.tld'))->withUserInfo($user, $pass);
     }
 
+    /** @return array<array<mixed>> */
     public static function provideInvalidUserInfoTypes(): array
     {
         return [

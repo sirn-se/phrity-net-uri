@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logotype.png" alt="Phrity Net Uri" width="100%"></p>
+
 [![Build Status](https://github.com/sirn-se/phrity-net-uri/actions/workflows/acceptance.yml/badge.svg)](https://github.com/sirn-se/phrity-net-uri/actions)
 [![Coverage Status](https://coveralls.io/repos/github/sirn-se/phrity-net-uri/badge.svg?branch=main)](https://coveralls.io/github/sirn-se/phrity-net-uri?branch=main)
 
@@ -44,10 +46,17 @@ $uri->withQuery('query2=2');
 $uri->withFragment('another-fragment');
 $uri->withUserInfo('username', 'password');
 
+// Equalable implementation
+$uri->equals('http://example.com/path/to/file.html');
+
+// Stringable implementation
+$uri->__toString();
+
+// JsonSerializable implementation
+$uri->jsonSerialize();
+
 // Additional methods
 $uri->toString();
-$uri->__toString();
-$uri->jsonSerialize();
 $uri->getQueryItems();
 $uri->getQueryItem('query1');
 $uri->withQueryItems(['query1' => '1', 'query2' => '2']);
@@ -103,6 +112,7 @@ $uri->getHost(Uri::IDN_ENCODE); // => 'xn--zca0cg32z7rau82strvd.com'
 
 | Version | PHP | |
 | --- | --- | --- |
+| `2.2` | `^8.1` | Equable implementation |
 | `2.1` | `^8.0` | URI encode/decode options |
 | `2.0` | `^8.0` | Query helpers, with([]) and getComponents() methods, IDN encode/decode |
 | `1.3` | `^7.4\|^8.0` |  |

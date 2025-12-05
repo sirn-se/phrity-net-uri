@@ -11,15 +11,20 @@
     displayDetailsOnTestsThatTriggerNotices="true"
     displayDetailsOnTestsThatTriggerWarnings="true"
 >
-  <coverage/>
-  <testsuites>
-    <testsuite name="Unit tests">
-      <directory suffix=".php">tests/suites/</directory>
-    </testsuite>
-  </testsuites>
-  <source>
-    <include>
-      <directory suffix=".php">src/</directory>
-    </include>
-  </source>
+    <testsuites>
+        <testsuite name="Unit tests">
+            <directory suffix=".php">tests/suites</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+    </source>
+    <extensions>
+        <bootstrap class="RobinIngelbrecht\PHPUnitCoverageTools\PhpUnitExtension">
+            <parameter name="exitOnLowCoverage" value="1"/>
+            <parameter name="cleanUpCloverXml" value="0"/>
+        </bootstrap>
+    </extensions>
 </phpunit>

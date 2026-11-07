@@ -690,7 +690,7 @@ class Uri implements Equalable, JsonSerializable, Stringable, UriInterface
     /**
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function queryMerge(array $a, array $b): array
     {
